@@ -8,25 +8,18 @@
 
 from __future__ import print_function
 
-import re
 import config
 
 from inspect import isclass, getmembers
-from functools import partial, update_wrapper
 from importlib import import_module
 from itertools import imap, repeat
 from os import path as p, listdir
 from savalidation import ValidationError
-from redis import Redis
-from rq import Queue
-from flask import Flask, render_template, g, flash, redirect, url_for
+from flask import Flask
 
 from sqlalchemy.exc import IntegrityError, OperationalError
-from flask.views import View
 from flask.ext.sqlalchemy import SQLAlchemy
-from flask.ext.bootstrap import Bootstrap
 from flask.ext.restless import APIManager
-from flask.ext.markdown import Markdown
 
 API_EXCEPTIONS = [
 	ValidationError, ValueError, AttributeError, TypeError, IntegrityError,
@@ -51,40 +44,10 @@ def _get_app_classes(module):
 	return ['%s' % x[0] for x in app_classes]
 
 
-def _get_view_func(page, mkd_folder):
-	path = p.join(__DIR__, mkd_folder, page['file'])
-	text = open(path).read()
-	pattern = '---'
-	matches = [match for match in re.finditer(pattern, text)]
-
-	if matches:
-		cfg_start = matches[0].end() + 1
-		cfg_end = matches[1].start() - 1
-		parse = text[cfg_start:cfg_end].split('\n')
-		cfg = dict([tuple(row.split(': ')) for row in parse])
-		md = text[matches[1].end() + 1:]
-	else:
-		cfg = {}
-		md = text
-
-	kwargs = {'md': md, 'id': page['id'], 'cfg': cfg}
-	func = page['id']
-	exec '%s = partial(_template, kwargs)' % func in globals(), locals()
-	update_wrapper(eval(func), _template)
-	eval(func).__name__ = func
-	return eval(func)
-
-
-def _template(kwargs):
-	return render_template('markdown.html', **kwargs)
-
-
 def create_app(config_mode=None, config_file=None):
 	# Create webapp instance
 	app = Flask(__name__)
 	db.init_app(app)
-	Bootstrap(app)
-	Markdown(app)
 
 	if config_mode:
 		app.config.from_object(getattr(config, config_mode))
@@ -93,56 +56,9 @@ def create_app(config_mode=None, config_file=None):
 	else:
 		app.config.from_envvar('APP_SETTINGS', silent=True)
 
-	[app.register_blueprint(bp) for bp in blueprints]
-
-	# set g variables
-	@app.before_request
-	def before_request():
-		g.site = app.config['SITE']
-		g.topnav = app.config['TOPNAV']
-		g.hero = app.config['HERO']
-		g.sub_units = app.config['SUB_UNITS']
-
-	@app.errorhandler(404)
-# 	@app.errorhandler(TypeError)
-	def not_found(error):
-		heading = 'Page not found.'
-		subheading = "Sorry, your page isn't available!"
-		kwargs = {
-			'id': 404, 'title': '404', 'heading': heading,
-			'subheading': subheading}
-
-		return render_template('page.html', **kwargs), 404
-
-	@app.context_processor
-	def utility_processor():
-		def currency(x):
-			try:
-				return '$%.2f' % x
-			except TypeError:
-				return x
-		return dict(currency=currency)
-
-# 	@app.template_filter()
-# 	def currency(x):
-# 		try:
-# 			return '$%.2f' % x
-# 		except TypeError:
-# 			return x
-
-# 	app.jinja_env.filters['currency'] = currency
-
 	@app.route('/')
 	def home():
-		return render_template('home.html')
-
-	# create markdown views
-	mkd_pages = app.config['MKD_PAGES']
-	mkd_folder = app.config['MKD_FOLDER']
-
-	for page in mkd_pages:
-		func = _get_view_func(page, mkd_folder)
-		app.add_url_rule('/%s/' % page['id'], view_func=func)
+		return 'Welcome to the Prometheus API!'
 
 	# Create the Flask-Restless API manager.
 	mgr = APIManager(app, flask_sqlalchemy_db=db)
@@ -152,7 +68,8 @@ def create_app(config_mode=None, config_file=None):
 		'validation_exceptions': API_EXCEPTIONS,
 		'allow_functions': app.config['API_ALLOW_FUNCTIONS'],
 		'allow_patch_many': app.config['API_ALLOW_PATCH_MANY'],
-		'max_results_per_page': app.config['API_MAX_RESULTS_PER_PAGE']}
+		'max_results_per_page': app.config['API_MAX_RESULTS_PER_PAGE'],
+		'url_prefix': app.config['API_URL_PREFIX']}
 
 	# provides a nested list of class names grouped by model in the form [[],[]]
 	# [[], ['Event', 'Type']]
@@ -173,51 +90,7 @@ def create_app(config_mode=None, config_file=None):
 	return app
 
 
-class Add(View):
-	def dispatch_request(self, table=None):
-		table = (table or self.table)
-		form, entry, redir = self.get_vars(table)
-		name = table.replace('_', ' ')
-
-		if form.validate_on_submit():
-			self.bookmark_table(table)
-			form.populate_obj(entry)
-			db.session.add(entry)
-			db.session.commit()
-
-			flash(
-				'Awesome! You just posted a new %s.' % name,
-				'alert alert-success')
-
-		else:
-			[flash('%s: %s.' % (k.title(), v[0]), 'alert alert-error')
-				for k, v in self.form.errors.iteritems()]
-
-		return redirect(url_for(redir, table=table))
-
-
-class RQ(View):
-	def dispatch_request(self):
-		form, func, args, name, redir = self.get_vars()
-
-		if form.validate_on_submit():
-			q = Queue(connection=Redis())
-			job = q.enqueue_call(func=func, args=args)
-
-			flash(
-				'Awesome! Your %s upload has just been %s.' %
-				(name, job.status), 'alert alert-success')
-
-		else:
-			[flash('%s: %s.' % (k.title(), v[0]), 'alert alert-error')
-				for k, v in form.errors.iteritems()]
-
-		return redirect(url_for(redir))
-
 # dynamically import app models and views
 modules = _get_modules(__DIR__)
 model_names = ['app.%s.models' % x for x in modules]
-view_names = ['app.%s.views' % x for x in modules]
 models = [import_module(x) for x in model_names]
-views = [import_module(x) for x in view_names]
-blueprints = map(getattr, views, modules)
