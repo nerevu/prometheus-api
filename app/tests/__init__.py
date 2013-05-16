@@ -9,8 +9,10 @@
 import sys
 import nose.tools as nt
 
+from pprint import pprint
 from flask import json
-from app import create_app, db
+from app import create_app, db, models
+from app.helper import process, get_init_values, get_tables, get_keys
 
 loads = json.loads
 dumps = json.dumps
@@ -24,7 +26,6 @@ def setup_package():
 	global app
 	global client
 	global jsonx
-	global endpoint
 	global base
 
 	app = create_app(config_mode='Test')
@@ -54,11 +55,10 @@ def check_equal(page, x, y):
 
 
 def get_globals():
-	global app
 	global client
-	global jsonx
 
-	return app, client, jsonx
+	content = [process(v, get_keys()) for v in get_init_values()]
+	return client, get_tables(), content
 
 
 class APIHelper:
@@ -68,7 +68,7 @@ class APIHelper:
 		# returns status_code 200
 
 		if id:
-			url = base + table + '/' + id
+			url = base + table + '/' + str(id)
 		else:
 			url = base + table
 
@@ -81,7 +81,7 @@ class APIHelper:
 
 	def delete_data(self, table, id):
 		# returns status_code 204
-		url = '%s/%s/%s' % (endpoint, table, id)
+		url = '%s/%s/%s' % (base, table, id)
 		r = client.delete(url, content_type=self.json)
 		return r
 
@@ -94,7 +94,7 @@ class APIHelper:
 	def patch_data(self, data, table, id=None, query=None):
 		# returns status_code 200 or 201
 		if id:
-			url = base + table + '/' + id
+			url = base + table + '/' + str(id)
 		else:
 			url = base + table
 
