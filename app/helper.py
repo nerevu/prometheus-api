@@ -1,167 +1,105 @@
+import re
 from flask import current_app as app
-from flask.ext.wtf import AnyOf, Required
-
-from app import db
-from app.connection import Connection
+from app import models
 
 
-# For use with Connection
-def portify(site):
-	site = site.split('/')
+def convert(name):
+	s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+	return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
-	if site[2] == 'localhost':
-		site[2] = 'localhost:%s' % app.config['PORT']
 
-	return '/'.join(site)
+def get_tables():
+	bp_keys = [k for k in app.blueprints.keys() if k.endswith('api0')]
+	tables = [k.replace('api0', '') for k in bp_keys]
+	tables.sort()
+	return tables
+
+
+def get_keys():
+	cols, tabs = [], []
+
+	for m in models:
+		classes = dir(m)
+
+		for c in classes:
+			try:
+				fields = getattr(m, c).__table__.columns.keys()
+				filtered = [
+					f for f in fields if not (
+						f.startswith('utc') or (
+							f.startswith('id') and len(f) == 2))]
+
+				cols.append(set(filtered))
+				tabs.append(c)
+
+			except AttributeError:
+				pass
+
+	tables = [convert(t) for t in tabs]
+	keys = dict(zip(tables, cols))
+	return keys
 
 
 # For flask-script
+# use list of dicts because tables must be added in a particular order, e.g.,
+# you have to add 'commodity_group' before 'commodity_type'
 def get_init_values():
-	values = [
-		[
+	return [
+		{
+		'exchange': [
 			('NYSE', 'New York Stock Exchange'), ('NASDAQ', 'NASDAQ'),
-			('OTC', 'Over the counter'), ('N/A', 'Currency')],  # exchange
-		[[('Yahoo')], [('Google')], [('XE')]],  # data_source
-		[[('Security')], [('Currency')], [('Other')]],  # commodity_group
-		[
-			('Stock', 1), ('Bond', 1), ('Mutual Fund', 1), ('ETF', 1),
-			('Currency', 2), ('Descriptor', 3)],  # commodity_type
-		[
-			('USD', 'US Dollar', 5, 3, 4),
-			('EUR', 'Euro', 5, 3, 4),
-			('GBP', 'Pound Sterling', 5, 3, 4),
-			('CAD', 'Canadian Dollar', 5, 3, 4),
-			('Multiple', 'Multiple', 6, 3, 4),
-			('AAPL', 'Apple', 1, 1, 1),
-			('Text', 'Text', 6, 3, 4)],  # commodity
-		[
+			('OTC', 'Over the counter'), ('N/A', 'Currency')],
+		'account_type': [(0, 'Brokerage'), (0, 'Roth IRA')],
+		'commodity_group': [[('Security')], [('Currency')], [('Other')]],
+		'company': [
+			('https://trading.scottrade.com/', '', 'Scottrade', '', '', '', ''),
+			('http://vanguard.com/', '', 'Vanguard', '', '', '', '')],
+		'data_source': [[('Yahoo')], [('Google')], [('XE')]],
+		'event_type': [
 			[('Dividend')], [('Special Dividend')], [('Stock Split')],
-			[('Name Change')], [('Ticker Change')]],  # event_type
-		[],  # event
-		[],  # price
-		[(1, 'Reuben', 'Cummings', 'reubano@gmail.com')],  # person
-		[
-			('Scottrade', 'https://trading.scottrade.com/'),
-			('Vanguard', 'http://vanguard.com/')],  # company
-		[[('Brokerage')], [('Roth IRA')]],  # account_type
-		[(1, 1, 1, 1, 'Scottrade'), (2, 2, 1, 1, 'Vanguard IRA')],  # account
-		[(6, 1)],  # holding
-		[[('Buy')], [('Sell')]],  # trxn_type
-		[(1, 1, 2, 455, '1/2/13', True)]]  # transaction
-
-	return values
+			[('Name Change')], [('Ticker Change')]],
+		'trxn_type': [('Buy', 'Buy'), ('Sell', 'Sell')]},
+		{
+		'commodity_type': [
+			(1, 'Stock'), (1, 'Bond'), (1, 'Mutual Fund'), (1, 'ETF'),
+			(2, 'Currency'), (3, 'Descriptor')]},
+		{
+		'commodity': [
+			('US Dollar', 4, 'USD', 3, 5),
+			('Euro', 4, 'EUR', 3, 5),
+			('Pound Sterling', 4, 'GBP', 3, 5),
+			('Canadian Dollar', 4, 'CAD', 3, 5),
+			('Multiple', 4, 'Multiple', 3, 6),
+			('Apple', 1, 'AAPL', 2, 1),
+			('Text', 4, 'Text', 3, 6)]},
+		{
+		'holding': [('', 1, 6)],
+		'account': [
+			(0, 'Scottrade', 1, 1, 1, 0, 0, 1),
+			(0, 'Vanguard IRA', 2, 2, 1, 0, 0, 1)],
+		'person': [
+			(0, 'Reuben', 'Cummings', 1, '', 0, '', 0, 'reubano@gmail.com')]}]
 
 
 def get_pop_values():
-	values = [
-		[],  # exchange
-		[],  # data_source
-		[],  # commodity_group
-		[],  # commodity_type
-		[
-			('IBM', 'International Business Machines', 1, 1, 1),
-			('WMT', 'Wal-Mart', 1, 1, 1),
-			('CAT', 'Caterpillar', 1, 1, 1)],  # commodity
-		[],  # event_type
-		[],  # event
-		[],  # price
-		[],  # person
-		[],  # company
-		[],  # account_type
-		[],  # account
-		[(8, 1), (9, 1), (10, 1)],  # holding
-		[],  # trxn_type
-		[
-			(2, 1, 10, 148, '1/2/13', True),
-			(3, 1, 12, 85, '1/2/13', True),
-			(1, 1, 2, 456, '1/2/13', True),
-			(4, 1, 14, 125, '1/2/13', True)]]  # transaction
-
-	return values
-
-
-# For views
-def get_plural(word):
-	if word[-1] == 'y':
-		return word[:-1] + 'ies'
-	else:
-		return word + 's'
-
-
-def get_kwargs(table, module, conn, form=None, post_table=True):
-	plural_table = get_plural(table).replace('_', ' ')
-	table_title = table.title().replace('_', ' ')
-	plural_table_title = plural_table.title()
-	form_fields, table_headers, results, keys = getattr(conn, table)
-	rows = conn.values(results, keys)
-
-	post_table = table if post_table else None
-	form_caption = '%s Entry Form' % table_title
-	heading = 'The %s database' % plural_table
-	subheading = (
-		'Add %s to the database and see them instantly updated in the lists '
-		'below.' % plural_table)
-
 	return {
-		'id': table, 'title': plural_table_title, 'heading': heading,
-		'subheading': subheading, 'rows': rows, 'form': form,
-		'form_caption': form_caption, 'table_caption': '%s List' % table_title,
-		'table_headers': table_headers, 'form_fields': form_fields,
-		'post_location': '%s.add' % module, 'post_table': post_table}
+		'commodity': [
+			('International Business Machines', 1, 'IBM', 1, 1),
+			('Wal-Mart', 1, 'WMT', 1, 1),
+			('Caterpillar', 1, 'CAT', 1, 1)],
+		'holding': [('', 1, 8), ('', 1, 9), ('', 1, 10)]}
 
 
-def init_form(form):
-	try:
-		form = form.new()
-	except AttributeError:
-		pass
+def process(post_values, keys):
+	tables = post_values.keys()
+	value_list = post_values.values()
+	key_list = [keys[t] for t in tables]
+	combo = zip(key_list, value_list)
 
-	return form
+	table_data = [
+		[dict(zip(list[0], values)) for values in list[1]]
+		for list in combo]
 
-
-# For forms
-def get_choices(a_class, value_field, *args, **kwargs):
-	order = getattr(a_class, args[0])
-
-	try:
-		filter = getattr(a_class, kwargs['column'])
-		value = kwargs['value']
-		result = a_class.query.filter(filter.in_(value)).order_by(order).all()
-	except KeyError:
-		result = a_class.query.order_by(order).all()
-
-	values = [getattr(x, value_field) for x in result]
-	combo = []
-
-	for arg in args:
-		try:
-			new = [getattr(getattr(x, arg[0]), arg[1]) for x in result]
-		except Exception:
-			new = [getattr(x, arg) for x in result]
-
-		combo.append(new)
-
-	try:
-		selection = [', '.join(x) for x in zip(combo[0], combo[1])]
-	except IndexError:
-		selection = combo[0]
-
-	return zip(values, selection)
-
-
-def get_x_choices(value, select):
-	class_a, class_b = value[0], select[0]
-	field_a, field_b = value[1], select[1]
-	result = db.session.query(class_a, class_b).join(class_b).all()
-	keys = [(0, field_a), (1, field_b)]
-	return Connection().values(result, keys)
-
-
-def get_validators(a_class, value_field):
-	result = a_class.query.all()
-	values = [getattr(x, value_field) for x in result]
-	values = sorted(values)
-	return [
-		Required(), AnyOf(
-			values, message=u'Invalid value, must be one of:'
-			'%(values)s')]
+	content_keys = ('table', 'data')
+	content_values = zip(tables, table_data)
+	return [dict(zip(content_keys, values)) for values in content_values]

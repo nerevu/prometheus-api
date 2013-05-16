@@ -8,10 +8,9 @@
 
 import nose.tools as nt
 
-from . import APIHelper, get_globals, check_equal, loads, err, conn
+from . import APIHelper, get_globals, check_equal, loads, err
 from pprint import pprint
 from app import create_app, db
-from app.helper import get_init_values
 
 
 def setup_module():
@@ -19,8 +18,7 @@ def setup_module():
 	global initialized
 	global content
 
-	values = get_init_values()
-	content = conn.process(values)
+	content = get_globals()[2]
 	initialized = True
 	print('Hermes Module Setup\n')
 
@@ -35,11 +33,18 @@ class TestHermesAPI(APIHelper):
 		assert not self.cls_initialized
 		db.create_all()
 
-		for piece in content:
-			table = piece['table']
-			data = piece['data']
-			result = [self.post_data(d, table) for d in data]
-			[nt.assert_equal(r.status_code, 201) for r in result]
+		for bundle in content:
+			for piece in bundle:
+				# err.write('\n%s\n' % piece)
+				table = piece['table']
+				data = piece['data']
+
+				for d in data:
+					r = self.post_data(d, table)
+					# err.write('\n%s' % table)
+					# err.write('\n%s' % d)
+					# err.write('\n%s\n' % r.data)
+					nt.assert_equal(r.status_code, 201)
 
 		self.cls_initialized = True
 
