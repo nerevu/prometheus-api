@@ -4,9 +4,8 @@ import os.path as p
 from subprocess import call
 from pprint import pprint
 
-from flask import current_app as app
-from flask.ext.script import Manager, Server
 from app import create_app, db
+from flask.ext.script import Manager
 
 manager = Manager(create_app)
 manager.add_option(
@@ -17,7 +16,6 @@ manager.add_option('-f', '--cfgfile', dest='config_file', type=p.abspath)
 @manager.command
 def checkstage():
 	"""Checks staged with git pre-commit hook"""
-
 	path = p.join(p.dirname(__file__), 'app', 'tests', 'test.sh')
 	cmd = "sh %s" % path
 	return call(cmd, shell=True)
@@ -25,8 +23,7 @@ def checkstage():
 
 @manager.command
 def runtests():
-	"""Checks staged with git pre-commit hook"""
-
+	"""Run nose tests"""
 	cmd = 'nosetests -xv'
 	return call(cmd, shell=True)
 
@@ -34,25 +31,24 @@ def runtests():
 @manager.command
 def createdb():
 	"""Creates database if it doesn't already exist"""
-
 	with app.app_context():
 		db.create_all()
-		print 'Database created'
+
+	print 'Database created'
 
 
 @manager.command
 def cleardb():
 	"""Removes all content from database"""
-
 	with app.app_context():
 		db.drop_all()
-		print 'Database cleared'
+
+	print 'Database cleared'
 
 
 @manager.command
 def resetdb():
 	"""Removes all content from database and creates new tables"""
-
 	with app.app_context():
 		cleardb()
 		createdb()
