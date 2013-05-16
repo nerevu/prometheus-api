@@ -2,6 +2,7 @@ import os
 from os import path as p
 
 _basedir = p.dirname(__file__)
+__YOUR_EMAIL__ = 'reubano@gmail.com'
 
 
 # configuration
@@ -16,16 +17,13 @@ class Config(Content):
 	heroku = os.environ.get('DATABASE_URL', False)
 
 	DEBUG = False
-	ADMINS = frozenset(['reubano@gmail.com'])
+	ADMINS = frozenset([__YOUR_EMAIL__])
 	TESTING = False
 	HOST = '127.0.0.1'
-# 	PORT = int(os.environ.get('PORT', 5005))
 	heroku_server = '%s%s.herokuapp.com' % (app, end)
 
 	if heroku:
 		SERVER_NAME = heroku_server
-# 	else:
-# 		SERVER_NAME = 'http://localhost:%s' % PORT
 
 	SECRET_KEY = os.environ.get('SECRET_KEY', 'key')
 	API_METHODS = ['GET', 'POST', 'DELETE', 'PATCH', 'PUT']
@@ -36,7 +34,8 @@ class Config(Content):
 
 
 class Production(Config):
-	defaultdb = 'postgres://reubano@localhost/app'
+	user = os.environ.get('USER', os.environ.get('USERNAME'))
+	defaultdb = 'postgres://%s@localhost/app' % user
 	SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', defaultdb)
 	HOST = '0.0.0.0'
 	BOOTSTRAP_USE_CDN = True
