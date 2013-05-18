@@ -11,6 +11,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import backref
 
 
+# Cronus models
 class Person(db.Model, ValidationMixin):
 	# auto keys
 	id = db.Column(db.Integer, primary_key=True)

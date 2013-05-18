@@ -22,6 +22,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 		cursor.close()
 
 
+# Hermes models
 class Exchange(db.Model, ValidationMixin):
 	# auto keys
 	id = db.Column(db.Integer, primary_key=True)
