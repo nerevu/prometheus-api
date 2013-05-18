@@ -9,13 +9,13 @@
 from __future__ import print_function
 
 import config
+import helper
 
 from inspect import isclass, getmembers
-from importlib import import_module
 from itertools import imap, repeat
-from os import path as p, listdir
 from savalidation import ValidationError
-from flask import Flask
+from flask import Flask, make_response
+from json import JSONEncoder, dumps
 
 from sqlalchemy.exc import IntegrityError, OperationalError
 from flask.ext.sqlalchemy import SQLAlchemy
@@ -26,16 +26,6 @@ API_EXCEPTIONS = [
 	OperationalError]
 
 db = SQLAlchemy()
-__DIR__ = p.dirname(__file__)
-
-
-def _get_modules(dir):
-	dirs = listdir(dir)
-	modules = [
-		d for d in dirs if p.isfile(p.join(dir, d, '__init__.py'))
-		and d != 'tests']
-
-	return modules
 
 
 def _get_app_classes(module):
@@ -44,9 +34,18 @@ def _get_app_classes(module):
 	return ['%s' % x[0] for x in app_classes]
 
 
+def jsonify(result):
+	response = make_response(dumps(result, cls=CustomEncoder))
+	response.headers['Content-Type'] = 'application/json; charset=utf-8'
+	response.headers['mimetype'] = 'application/json'
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
+
+
 def create_app(config_mode=None, config_file=None):
 	# Create webapp instance
 	app = Flask(__name__)
+	models = helper.get_models()
 	db.init_app(app)
 
 	if config_mode:
@@ -60,9 +59,26 @@ def create_app(config_mode=None, config_file=None):
 	def home():
 		return 'Welcome to the Prometheus API!'
 
+	@app.route('/reset/')
+	def reset():
+		db.drop_all()
+		db.create_all()
+		return jsonify({'objects': 'Database reset!'})
+
+	@app.route('/keys/')
+	def keys():
+		return jsonify({'objects': helper.get_keys()})
+
+	@app.route('/init_values/')
+	def init_values():
+		return jsonify({'objects': helper.get_init_values()})
+
+	@app.route('/pop_values/')
+	def pop_values():
+		return jsonify({'objects': helper.get_pop_values()})
+
 	# Create the Flask-Restless API manager.
 	mgr = APIManager(app, flask_sqlalchemy_db=db)
-
 	kwargs = {
 		'methods': app.config['API_METHODS'],
 		'validation_exceptions': API_EXCEPTIONS,
@@ -90,7 +106,10 @@ def create_app(config_mode=None, config_file=None):
 	return app
 
 
-# dynamically import app models and views
-modules = _get_modules(__DIR__)
-model_names = ['app.%s.models' % x for x in modules]
-models = [import_module(x) for x in model_names]
+class CustomEncoder(JSONEncoder):
+	def default(self, obj):
+		if set(['quantize', 'year']).intersection(dir(obj)):
+			return str(obj)
+		elif set(['next', 'union']).intersection(dir(obj)):
+			return list(obj)
+		return JSONEncoder.default(self, obj)

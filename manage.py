@@ -5,6 +5,7 @@ from subprocess import call
 from pprint import pprint
 
 from app import create_app, db
+from flask import current_app as app
 from flask.ext.script import Manager
 
 manager = Manager(create_app)
@@ -52,7 +53,6 @@ def resetdb():
 	with app.app_context():
 		cleardb()
 		createdb()
-
 
 if __name__ == '__main__':
 	manager.run()

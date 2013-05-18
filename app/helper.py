@@ -1,6 +1,24 @@
 import re
+from importlib import import_module
+from os import path as p, listdir
 from flask import current_app as app
-from app import models
+
+
+# dynamically import app models
+def get_modules(dir):
+	dirs = listdir(dir)
+	modules = [
+		d for d in dirs if p.isfile(p.join(dir, d, '__init__.py'))
+		and d != 'tests']
+
+	return modules
+
+
+def get_models():
+	dir = p.dirname(__file__)
+	modules = get_modules(dir)
+	model_names = ['app.%s.models' % x for x in modules]
+	return [import_module(x) for x in model_names]
 
 
 def convert(name):
@@ -18,18 +36,19 @@ def get_tables():
 def get_keys():
 	cols, tabs = [], []
 
-	for m in models:
+	for m in get_models():
 		classes = dir(m)
 
 		for c in classes:
 			try:
 				fields = getattr(m, c).__table__.columns.keys()
+				fields.sort()
 				filtered = [
 					f for f in fields if not (
 						f.startswith('utc') or (
 							f.startswith('id') and len(f) == 2))]
 
-				cols.append(set(filtered))
+				cols.append(filtered)
 				tabs.append(c)
 
 			except AttributeError:
@@ -40,20 +59,19 @@ def get_keys():
 	return keys
 
 
-# For flask-script
 # use list of dicts because tables must be added in a particular order, e.g.,
 # you have to add 'commodity_group' before 'commodity_type'
 def get_init_values():
 	return [
 		{
 		'exchange': [
-			('NYSE', 'New York Stock Exchange'), ('NASDAQ', 'NASDAQ'),
-			('OTC', 'Over the counter'), ('N/A', 'Currency')],
+			('New York Stock Exchange', 'NYSE'), ('NASDAQ', 'NASDAQ'),
+			('Over the counter', 'OTC'), ('Currency', 'N/A')],
 		'account_type': [(0, 'Brokerage'), (0, 'Roth IRA')],
 		'commodity_group': [[('Security')], [('Currency')], [('Other')]],
 		'company': [
-			('https://trading.scottrade.com/', '', 'Scottrade', '', '', '', ''),
-			('http://vanguard.com/', '', 'Vanguard', '', '', '', '')],
+			('', '', 'Scottrade', '', '', 'https://trading.scottrade.com/', ''),
+			('', '', 'Vanguard', '', '', 'http://vanguard.com/', '')],
 		'data_source': [[('Yahoo')], [('Google')], [('XE')]],
 		'event_type': [
 			[('Dividend')], [('Special Dividend')], [('Stock Split')],
@@ -65,40 +83,40 @@ def get_init_values():
 			(2, 'Currency'), (3, 'Descriptor')]},
 		{
 		'commodity': [
-			('US Dollar', 4, 'USD', 3, 5),
-			('Euro', 4, 'EUR', 3, 5),
-			('Pound Sterling', 4, 'GBP', 3, 5),
-			('Canadian Dollar', 4, 'CAD', 3, 5),
-			('Multiple', 4, 'Multiple', 3, 6),
-			('Apple', 1, 'AAPL', 2, 1),
-			('Text', 4, 'Text', 3, 6)]},
+			(3, 4, 'US Dollar', 'USD', 5),
+			(3, 4, 'Euro', 'EUR', 5),
+			(3, 4, 'Pound Sterling', 'GBP', 5),
+			(3, 4, 'Canadian Dollar', 'CAD', 5),
+			(3, 4, 'Multiple', 'Multiple', 6),
+			(1, 1, 'Apple', 'AAPL', 1),
+			(3, 4, 'Text', 'Text', 6)]},
 		{
-		'holding': [('', 1, 6)],
+		'holding': [(1, 6, '')],
 		'account': [
-			(0, 'Scottrade', 1, 1, 1, 0, 0, 1),
-			(0, 'Vanguard IRA', 2, 2, 1, 0, 0, 1)],
+			(0, 1, 1, 0, 'Scottrade', 1, 0, 1),
+			(0, 2, 1, 0, 'Vanguard IRA', 1, 0, 1)],
 		'person': [
-			(0, 'Reuben', 'Cummings', 1, '', 0, '', 0, 'reubano@gmail.com')]}]
+			('', 1, 'reubano@gmail.com', 'Reuben', 'Cummings', 0, 0, 0, '')]}]
 
 
 def get_pop_values():
-	return {
+	return [{
 		'commodity': [
-			('International Business Machines', 1, 'IBM', 1, 1),
-			('Wal-Mart', 1, 'WMT', 1, 1),
-			('Caterpillar', 1, 'CAT', 1, 1)],
-		'holding': [('', 1, 8), ('', 1, 9), ('', 1, 10)]}
+			(1, 1, 'International Business Machines', 'IBM', 1),
+			(1, 1, 'Wal-Mart', 'WMT', 1),
+			(1, 1, 'Caterpillar', 'CAT', 1)],
+		'holding': [(1, 8, ''), (1, 9, ''), (1, 10, '')]}]
 
 
 def process(post_values, keys):
 	tables = post_values.keys()
 	value_list = post_values.values()
-	key_list = [keys[t] for t in tables]
+	# wrap keys in tuple() to prevent ["name"] from iterating over each letter
+	key_list = [tuple(keys[t]) for t in tables]
 	combo = zip(key_list, value_list)
 
 	table_data = [
-		[dict(zip(list[0], values)) for values in list[1]]
-		for list in combo]
+		[dict(zip(c[0], values)) for values in c[1]] for c in combo]
 
 	content_keys = ('table', 'data')
 	content_values = zip(tables, table_data)
