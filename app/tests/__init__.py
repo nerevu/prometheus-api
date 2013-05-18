@@ -11,7 +11,7 @@ import nose.tools as nt
 
 from pprint import pprint
 from flask import json
-from app import create_app, db, models
+from app import create_app, db
 from app.helper import process, get_init_values, get_tables, get_keys
 
 loads = json.loads
