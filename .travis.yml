@@ -20,7 +20,7 @@ env:
 after_success:
   # Install heroku toolbelt and add remote repo	
   - wget -qO- https://toolbelt.heroku.com/install-ubuntu.sh | sh
-  - git remote add staging git@heroku.com:prometheus.git
+  - git remote add heroku git@heroku.com:prometheus-api.git
 
   # Turn off warnings about SSH keys:
   - echo "Host heroku.com" >> ~/.ssh/config
@@ -29,5 +29,5 @@ after_success:
   - echo "   UserKnownHostsFile=/dev/null" >> ~/.ssh/config
   - heroku keys:clear
   - yes | heroku keys:add
-  - yes | git push staging $TRAVIS_BRANCH
+  - yes | git push heroku $TRAVIS_BRANCH
 
