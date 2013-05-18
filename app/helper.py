@@ -1,6 +1,24 @@
 import re
+from importlib import import_module
+from os import path as p, listdir
 from flask import current_app as app
-from app import models
+
+
+# dynamically import app models
+def get_modules(dir):
+	dirs = listdir(dir)
+	modules = [
+		d for d in dirs if p.isfile(p.join(dir, d, '__init__.py'))
+		and d != 'tests']
+
+	return modules
+
+
+def get_models():
+	dir = p.dirname(__file__)
+	modules = get_modules(dir)
+	model_names = ['app.%s.models' % x for x in modules]
+	return [import_module(x) for x in model_names]
 
 
 def convert(name):
@@ -18,7 +36,7 @@ def get_tables():
 def get_keys():
 	cols, tabs = [], []
 
-	for m in models:
+	for m in get_models():
 		classes = dir(m)
 
 		for c in classes:
