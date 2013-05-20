@@ -20,6 +20,7 @@ env:
 
 after_success:
 - if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then exit 0; fi
+- if [[ "$TRAVIS_BRANCH" != "master" ]]; then exit 0; fi
 - wget -qO- https://toolbelt.heroku.com/install-ubuntu.sh | sh
 - git remote add heroku git@heroku.com:prometheus-api.git
 - echo "Host heroku.com" >> ~/.ssh/config
@@ -28,4 +29,4 @@ after_success:
 - echo "   UserKnownHostsFile=/dev/null" >> ~/.ssh/config
 - heroku keys:clear
 - yes | heroku keys:add
-- yes | git push heroku $TRAVIS_BRANCH
+- yes | git push heroku master
