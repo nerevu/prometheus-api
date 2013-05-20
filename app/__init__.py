@@ -14,7 +14,7 @@ import helper
 from inspect import isclass, getmembers
 from itertools import imap, repeat
 from savalidation import ValidationError
-from flask import Flask, make_response
+from flask import Flask, make_response, redirect
 from json import JSONEncoder, dumps
 
 from sqlalchemy.exc import IntegrityError, OperationalError
@@ -57,7 +57,7 @@ def create_app(config_mode=None, config_file=None):
 
 	@app.route('/')
 	def home():
-		return 'Welcome to the Prometheus API!'
+		return redirect('http://docs.reubano.apiary.io/')
 
 	@app.route('/reset/')
 	def reset():
