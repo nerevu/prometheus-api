@@ -110,8 +110,7 @@ def get_pop_values():
 def process(post_values, keys):
 	tables = post_values.keys()
 	value_list = post_values.values()
-	# wrap keys in tuple() to prevent ["name"] from iterating over each letter
-	key_list = [tuple(keys[t]) for t in tables]
+	key_list = [keys[t] for t in tables]
 	combo = zip(key_list, value_list)
 
 	table_data = [
