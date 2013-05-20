@@ -6,18 +6,16 @@ from flask import current_app as app
 
 # dynamically import app models
 def get_modules(dir):
-	dirs = listdir(dir)
-	modules = [
-		d for d in dirs if p.isfile(p.join(dir, d, '__init__.py'))
-		and d != 'tests']
-
-	return modules
+	files = listdir(dir)
+	return [
+		f for f in files if (
+			f.endswith('py') and not (f.endswith('pyc') or f.startswith('_')))]
 
 
 def get_models():
-	dir = p.dirname(__file__)
+	dir = p.join(p.dirname(__file__), 'models')
 	modules = get_modules(dir)
-	model_names = ['app.%s.models' % x for x in modules]
+	model_names = ['app.models.%s' % p.splitext(x)[0] for x in modules]
 	return [import_module(x) for x in model_names]
 
 
