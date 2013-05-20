@@ -15,8 +15,8 @@ def get_modules(dir):
 def get_models():
 	dir = p.join(p.dirname(__file__), 'models')
 	modules = get_modules(dir)
-	model_names = ['app.models.%s' % p.splitext(x)[0] for x in modules]
-	return [import_module(x) for x in model_names]
+	models = ['app.models.%s' % p.splitext(x)[0] for x in modules]
+	return [import_module(x) for x in models]
 
 
 # convert from CamelCase to camel_case
