@@ -1,52 +1,46 @@
 HOST: http://prometheus-api.herokuapp.com/
-
+ 
 --- Prometheus API ---
+ 
+-- Exchange Resources --
 
-# Exchange Resources
+List all stock exchanges
+GET /exchange
+< 200
+< Content-Type: application/json
+{
+  "total_pages": 1, 
+  "objects": [
+    {
+      "commodities": [], 
+      "id": 1, 
+      "name": "New York Stock Exchange", 
+      "symbol": "NYSE", 
+      "utc_created": "2013-05-18T04:08:32.702383", 
+      "utc_updated": "2013-05-18T04:08:32.702432"
+    } 
+  ], 
+  "num_results": 1, 
+  "page": 1
+}
 
-## GET /exchange{/id}
-
-List stock exchanges
-
-+ Parameters
-	+ id (int): ID of an exchange to retrieve. If no id specified all exchanges are returned.
-
-+ Response 200 (application/json)
-
-	+ Parameters
-        + commodities (array): Related commodities.
-        + id (int): Exchange ID.
-    	+ name (string): Exchange name.
-        + symbol (string): Exchange symbol.
-        + utc_created (string): UTC time the exchange was created.
-        + utc_updated (string): UTC time the exchange was last updated.
-
-    + Body
-
-			{
-			  "total_pages": 1,
-			  "objects": [
-				{
-				  "name": "New York Stock Exchange",
-				  "symbol": "NYSE",
-				  "commodities": [],
-				  "utc_created": "2013-05-18T04:08:32.702383",
-				  "id": 1,
-				  "utc_updated": "2013-05-18T04:08:32.702432"
-				}
-			  ],
-			  "num_results": 1,
-			  "page": 1
-			}
-
-## POST /exchange
-
+List a particular stock exchange
+GET /exchange/{id}
+< 200
+< Content-Type: application/json
+{
+  "commodities": [], 
+  "id": 1, 
+  "name": "New York Stock Exchange", 
+  "symbol": "NYSE", 
+  "utc_created": "2013-05-18T04:08:32.702383", 
+  "utc_updated": "2013-05-18T04:08:32.702432"
+}
+ 
 Add new stock exchanges
-
-+ Request new exchange (application/json)
-
-		{ "name":"New York Stock Exchange", "symbol": "NYSE" }
-
-+ Response 201 (application/json)
-
-		{"id": 1}
+POST /exchange
+> Content-Type: application/json
+{ "name":"New York Stock Exchange", "symbol": "NYSE" }
+< 201
+< Content-Type: application/json
+{"id": 1}
