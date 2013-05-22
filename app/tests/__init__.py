@@ -57,7 +57,8 @@ def check_equal(page, x, y):
 def get_globals():
 	global client
 
-	content = [process(v, get_keys()) for v in get_init_values()]
+	keys = get_keys()
+	content = [process(v, keys) for v in get_init_values()]
 	return client, get_tables(), content
 
 

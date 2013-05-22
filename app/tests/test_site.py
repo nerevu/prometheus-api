@@ -87,4 +87,4 @@ class TestWeb:
 
 	def test_home(self):
 		r = client.get('/')
-		nt.assert_equal(r.status_code, 200)
+		nt.assert_equal(r.status_code, 302)

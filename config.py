@@ -1,8 +1,12 @@
 import os
 from os import path as p
 
+# module vars
 _basedir = p.dirname(__file__)
-__YOUR_EMAIL__ = 'reubano@gmail.com'
+_user = os.environ.get('USER', os.environ.get('USERNAME'))
+
+# configurable vars
+__YOUR_EMAIL__ = '%s@gmail.com' % _user
 
 
 # configuration
@@ -34,12 +38,10 @@ class Config(Content):
 
 
 class Production(Config):
-	user = os.environ.get('USER', os.environ.get('USERNAME'))
-	defaultdb = 'postgres://%s@localhost/app' % user
+
+	defaultdb = 'postgres://%s@localhost/app' % _user
 	SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', defaultdb)
 	HOST = '0.0.0.0'
-	BOOTSTRAP_USE_CDN = True
-	BOOTSTRAP_FONTAWESOME = True
 
 
 class Development(Config):
