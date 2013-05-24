@@ -3,7 +3,7 @@ from os import path as p
 
 # module vars
 _basedir = p.dirname(__file__)
-_user = os.environ.get('USER', os.environ.get('USERNAME'))
+_user = os.environ.get('USER', os.environ.get('USERNAME', 'default'))
 
 # configurable vars
 __YOUR_EMAIL__ = '%s@gmail.com' % _user

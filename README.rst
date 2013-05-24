@@ -1,4 +1,4 @@
-prometheus |build|
+prometheus-api |build|
 ==================
 
 .. |build| image:: https://secure.travis-ci.org/reubano/prometheus-api.png
@@ -53,18 +53,18 @@ Quick Start
 	cd prometheus-api
 	sudo easy_install pip
 	sudo pip install -r requirements-local.txt
-	cd prometheus
+	cd ../prometheus
 	sudo easy_install pip
 	sudo pip install -r requirements-local.txt
 
 *Run API server*
 
-	cd prometheus-api
+	cd ../prometheus-api
 	./manage.py runserver -p 5005
 
 *Run app server* (in new tab)
 
-	cd prometheus
+	cd ../prometheus
 	./manage.py runserver
 
 Now *view the app* at ``http://localhost:5000``
@@ -184,7 +184,7 @@ Documentation
 -------------
 
 For a list of available resources, example requests and responses, and code samples,
-view the `online documentation <http://docs.reubano.apiary.io/>`_. View the `Flask-Restless guide <http://flask-restless.readthedocs.org>`_ for more `request/response examples <http://flask-restless.readthedocs.org/en/latest/requestformat.html>`_ and directions on `making search queries. <http://flask-restless.readthedocs.org/en/latest/searchformat.html>`_
+view the `online documentation <http://docs.prometheus.apiary.io/>`_. View the `Flask-Restless guide <http://flask-restless.readthedocs.org>`_ for more `request/response examples <http://flask-restless.readthedocs.org/en/latest/requestformat.html>`_ and directions on `making search queries. <http://flask-restless.readthedocs.org/en/latest/searchformat.html>`_
 
 Advanced Installation
 ---------------------
@@ -220,7 +220,7 @@ projects without worrying about adverse interactions.
 
 ::
 
-	cd prometheus
+	cd ../prometheus
 	mkvirtualenv --no-site-packages prometheus
 	sudo easy_install pip
 	sudo pip install -r requirements-local.txt
