@@ -184,7 +184,7 @@ Documentation
 -------------
 
 For a list of available resources, example requests and responses, and code samples,
-view the `online documentation <http://docs.reubano.apiary.io/>`_. View the `Flask-Restless guide <http://flask-restless.readthedocs.org>`_ for more `request/response examples <http://flask-restless.readthedocs.org/en/latest/requestformat.html>`_ and directions on `making search queries. <http://flask-restless.readthedocs.org/en/latest/searchformat.html>`_
+view the `online documentation <http://docs.prometheus.apiary.io/>`_. View the `Flask-Restless guide <http://flask-restless.readthedocs.org>`_ for more `request/response examples <http://flask-restless.readthedocs.org/en/latest/requestformat.html>`_ and directions on `making search queries. <http://flask-restless.readthedocs.org/en/latest/searchformat.html>`_
 
 Advanced Installation
 ---------------------
