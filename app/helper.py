@@ -39,6 +39,13 @@ def convert(name):
 	return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
 
+def get_plural(word):
+	if word[-1] == 'y':
+		return word[:-1] + 'ies'
+	else:
+		return word + 's'
+
+
 def get_tables():
 	bp_keys = [k for k in app.blueprints.keys() if k.endswith('api0')]
 	tables = [k.replace('api0', '') for k in bp_keys]
@@ -133,3 +140,95 @@ def process(post_values, keys):
 	content_keys = ('table', 'data')
 	content_values = zip(tables, table_data)
 	return [dict(zip(content_keys, values)) for values in content_values]
+
+
+def get_columns(model):
+	"""Returns a dictionary-like object containing all the columns of the
+	specified `model` class.
+
+	"""
+	return model._sa_class_manager
+
+
+def get_req_columns(model):
+	"""Returns a dictionary-like object containing all the columns of the
+	specified `model` class.
+
+	"""
+	colums = model._sa_class_manager
+	filtered = [
+		c for c in colums if not (
+			c.startswith('utc') or (c.startswith('id') and len(c) == 2))]
+
+	return filtered
+
+def get_relations(model):
+	"""Returns a list of relation names of `model` (as a list of strings)."""
+	cols = get_columns(model)
+	return [k for k in cols if isinstance(cols[k].property, RelProperty)]
+
+
+def get_type(c):
+	if (
+		c.startswith('id_') or c.endswith('_id') or (
+			c.startswith('id') and len(c) == 2)):
+
+		type = '<int>'
+	elif (c.startswith('utc') or c.endswith('datetime')):
+		type = '<datetime>'
+	elif (c.startswith('date') or c.endswith('date')):
+		type = '<date>'
+	else:
+		type = '<str>'
+
+	return type
+
+
+def doc_api(modules):
+	cols, tables, models = repeat([], 3)
+	resp = 'HOST: http://prometheus-api.herokuapp.com/\n\n'
+	resp += '--- Prometheus API ---\n'
+
+	for module in modules:
+		models.extend(get_model_classes(module))
+
+	for model in models:
+		table = model.__name__
+		plural_table = get_plural(table)
+		end_point = model.__tablename__
+		other, deep_other, related, deep_related, required = repeat('', 5)
+
+		for column in get_columns(model):
+			other += '\n  "%s": %s,' % (column, get_type(column))
+			deep_other += '\n       "%s": %s,' % (column, get_type(column))
+
+		for column in get_req_columns(model):
+			required += '\n   "%s": %s,' % (column, get_type(column))
+
+		# for relation in get_relations(model):
+		# 	related += '\n    "%(c)s": %(c)s,' % {'c': relation}
+		# 	deep_related += '\n         "%(c)s": %(c)s,' % {'c': relation}
+
+		object = '{  %s\n}' % other
+		deep_object = '     {        %s\n      }' % deep_other
+		# TODO: add related fields to object
+
+		json = '{\n  "total_pages": 1,\n  "objects": [\n%s\n  ],\n  "num_results": 1,\n  "page": 1\n}' % deep_object
+
+		resp += '\n-- %s Resources --\n' % table
+		resp += '\nList all %s\n' % plural_table
+		resp += 'GET /%s\n' % end_point
+		resp += '< 200\n< Content-Type: application/json\n'
+		resp += '%s\n' % json
+		resp += '\nList a particular %s\n' % table
+		resp += 'GET /%s/{id}\n' % end_point
+		resp += '< 200\n< Content-Type: application/json\n'
+		resp += '%s\n' % object
+		resp += '\nAdd new %s\n' % plural_table
+		resp += 'POST /%s\n' % end_point
+		resp += '> Content-Type: application/json\n'
+		resp += '{%s\n}\n' % required
+		resp += '< 201\n< Content-Type: application/json\n'
+		resp += '{"id": <int>}\n'
+
+	return resp

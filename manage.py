@@ -5,6 +5,7 @@ from subprocess import call
 from pprint import pprint
 
 from app import create_app, db
+from app.helper import doc_api, get_modules
 from flask import current_app as app
 from flask.ext.script import Manager
 
@@ -53,6 +54,11 @@ def resetdb():
 	with app.app_context():
 		cleardb()
 		createdb()
+
+
+@manager.command
+def docapi():
+	print doc_api(get_modules())
 
 if __name__ == '__main__':
 	manager.run()
