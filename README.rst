@@ -242,12 +242,12 @@ projects without worrying about adverse interactions.
 	sudo easy_install pip
 	sudo pip install -r requirements-local.txt
 
-Prometheus configuration
+Prometheus setup
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 By default, Prometheus uses the API hosted at http://prometheus-api.herokuapp.com.
-To setup Prometheus to use your own API, set the
-``__API_BASE__`` variable in ``config.py`` to the appropriate url.
+To setup Prometheus to use your own API, set the ``__API_BASE__`` variable in
+``config.py`` in the prometheus repository to the appropriate url.
 
 Production Server
 ^^^^^^^^^^^^^^^^^
