@@ -1,22 +1,36 @@
 import re
 from importlib import import_module
+from inspect import isclass, getmembers
 from os import path as p, listdir
+from itertools import repeat
 from flask import current_app as app
-
+from datetime import datetime as dt, date as d
+from sqlalchemy.orm.properties import RelationshipProperty as RelProperty
 
 # dynamically import app models
-def get_modules(dir):
+def get_modules():
+	dir = p.join(p.dirname(__file__), 'models')
 	files = listdir(dir)
-	return [
+	modules = [
 		f for f in files if (
 			f.endswith('py') and not (f.endswith('pyc') or f.startswith('_')))]
+	imports = ['app.models.%s' % p.splitext(x)[0] for x in modules]
+	return [import_module(x) for x in imports]
 
 
-def get_models():
-	dir = p.join(p.dirname(__file__), 'models')
-	modules = get_modules(dir)
-	models = ['app.models.%s' % p.splitext(x)[0] for x in modules]
-	return [import_module(x) for x in models]
+def get_model_sets(modules):
+	classes = getmembers(modules, isclass)
+	return filter(lambda x: str(x[1]).startswith("<class 'app"), classes)
+
+
+def get_model_classes(modules):
+	set = get_model_sets(modules)
+	return [x[1] for x in set]
+
+
+def get_models(modules):
+	set = get_model_sets(modules)
+	return [x[0] for x in set]
 
 
 # convert from CamelCase to camel_case
