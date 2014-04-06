@@ -32,7 +32,7 @@ config = {
 	'packages': find_packages(),
 	'zip_safe': False,
 	'license': 'MIT',
-	'keywords': 'asset-allocation, portfolio, api, rest',
+	'keywords': 'api, finance',
 	'platforms' ['MacOS X', 'Windows', 'Linux'],
 	'include_package_data': True}
 
