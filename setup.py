@@ -33,9 +33,8 @@ config = {
 	'packages': find_packages(),
 	'zip_safe': False,
 	'license': 'MIT',
-	'keywords': 'finance',
-	'type': 'api',
-	'platforms' ['MacOS X', 'Windows', 'Linux'],
+	'keywords': 'finance, asset-allocation, portfolio, api, postgres, rest'
+	'platforms' ['MacOS X', 'Windows', 'Linux']
 	'include_package_data': True}
 
 setup(**config)
