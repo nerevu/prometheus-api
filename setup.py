@@ -22,6 +22,7 @@ config = {
 	'classifiers': ['Development Status :: 4 - Beta',
 		'License :: OSI Approved :: The MIT License (MIT)',
 		'Environment :: Web Environment',
+		'Environment :: Console',
 		'Intended Audience :: Developers',
 		'Intended Audience :: Financial and Insurance Industry',
 		'Topic :: Database',
