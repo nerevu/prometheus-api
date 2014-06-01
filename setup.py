@@ -22,9 +22,9 @@ config = {
 	'classifiers': ['Development Status :: 4 - Beta',
 		'License :: OSI Approved :: The MIT License (MIT)',
 		'Environment :: Web Environment',
-		'Environment :: Console',
 		'Intended Audience :: Developers',
 		'Intended Audience :: Financial and Insurance Industry',
+		'Topic :: Internet :: WWW/HTTP :: WSGI :: Server',
 		'Topic :: Database',
 		'Topic :: Office/Business :: Financial :: Investment',
 		'Operating System :: MacOS :: MacOS X',
@@ -33,7 +33,8 @@ config = {
 	'packages': find_packages(),
 	'zip_safe': False,
 	'license': 'MIT',
-	'keywords': 'api, finance',
+	'keywords': 'finance',
+	'type': 'api',
 	'platforms' ['MacOS X', 'Windows', 'Linux'],
 	'include_package_data': True}
 
