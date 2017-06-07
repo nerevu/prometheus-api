@@ -186,14 +186,31 @@ Documentation
 For a list of available resources, example requests and responses, and code samples,
 view the `online documentation <http://docs.prometheus.apiary.io/>`_. View the `Flask-Restless guide <http://flask-restless.readthedocs.org>`_ for more `request/response examples <http://flask-restless.readthedocs.org/en/latest/requestformat.html>`_ and directions on `making search queries. <http://flask-restless.readthedocs.org/en/latest/searchformat.html>`_
 
+Services
+----------
+
+The Prometheus API is seperated into differenet services, each responsible for performing a specific set of tasks.
+
+========= ================================================================ 
+service   description                                                     
+========= ================================================================ 
+Hermes    price/event data agregator
+Cronus    portfolio performance analytics and allocation engine
+Icarus    portfolio risk profiler
+Oracle    random portfolio generator
+Lynx      portfolio x-ray engine
+Rosetta   3rd party portfolio data converter
+========= ============================================================== 
+
+
 Advanced Installation
 ---------------------
 
 Virtual environment setup
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Ideally, you should install modules for every project into a `virtual environment <http://blog.sidmitra.com/manage-multiple-projects-better-with-virtuale>`_.
-This setup will allow you to install different versions of the same module into different
+Ideally, you should install python modules for every project into a `virtual environment <http://blog.sidmitra.com/manage-multiple-projects-better-with-virtuale>`_.
+This setup will allow you to use different versions of the same module in different
 projects without worrying about adverse interactions.
 
 	sudo pip install virtualenv virtualenvwrapper
