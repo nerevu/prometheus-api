@@ -12,8 +12,9 @@ import pytest
 
 from app import create_app, db
 from app.helper import (
-    get_table_names, get_models, process, get_init_values, gen_tables,
-    get_keys, JSON, get_json)
+    get_table_names, get_models, process, get_init_data, gen_tables,
+    JSON, get_json)
+
 
 @pytest.fixture
 def client(request):
@@ -21,7 +22,6 @@ def client(request):
     client = app.test_client()
     models = get_models()
     tables = list(gen_tables(models))
-    keys = dict(get_keys(tables))
 
     def get_num_results(table):
         r = client.get(client.prefix + table)
@@ -38,10 +38,9 @@ def client(request):
     with app.test_request_context():
         db.create_all()
         client.tables = get_table_names(tables)
-        content = [process(v, keys) for v in get_init_values()]
+        raw = get_init_data()
 
-    for bundle in content:
-        for piece in bundle:
+        for piece in process(raw):
             url = client.prefix + piece['table']
 
             for d in piece['data']:

@@ -4,10 +4,13 @@ from __future__ import (
     absolute_import, division, print_function, unicode_literals)
 
 import re
+
 from importlib import import_module
 from inspect import isclass, getmembers
 from os import path as p, listdir
 from itertools import repeat
+from json import loads
+
 from flask import current_app as app
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -15,6 +18,8 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from builtins import *
 
 COLUMN_TYPES = (InstrumentedAttribute, hybrid_property)
+JSON = 'application/json'
+get_json = lambda r: loads(r.get_data(as_text=True))
 
 
 def get_plural(word):
@@ -53,15 +58,6 @@ def get_table_names(tables):
     return [t.__tablename__ for t in tables]
 
 
-def get_keys(tables):
-    filterer = lambda name: not (name.startswith('utc') or name == 'id')
-
-    for table in tables:
-        _columns = gen_columns(table, False)
-        columns = sorted(name for name, col in _columns if filterer(name))
-        yield table.__tablename__, columns
-
-
 def gen_columns(table, related=True):
     """Yields all the columns of the specified `table` class.
 
@@ -75,9 +71,15 @@ def gen_columns(table, related=True):
                     yield (name, column)
 
 
+def get_col_names(table):
+    filterer = lambda name: not (name.startswith('utc') or name == 'id')
+    _columns = gen_columns(table, False)
+    return sorted(name for name, col in _columns if filterer(name))
+
+
 # use list of dicts because tables must be added in a particular order, e.g.,
 # you have to add 'commodity_group' before 'commodity_type'
-def get_init_values():
+def get_init_data():
     return [
         {
             'exchange': [
@@ -125,12 +127,12 @@ def get_pop_values():
         'holding': [(1, 8, ''), (1, 9, ''), (1, 10, '')]}]
 
 
-def process(post_values, keys):
-    tables = post_values.keys()
-    value_list = post_values.values()
-    key_list = [keys[t] for t in tables]
-    combo = zip(key_list, value_list)
-    table_data = [[dict(zip(c[0], values)) for values in c[1]] for c in combo]
-    content_keys = ('table', 'data')
-    content_values = zip(tables, table_data)
-    return [dict(zip(content_keys, values)) for values in content_values]
+def process(raw):
+    _tables = list(gen_tables(get_models()))
+    tables = dict(zip(get_table_names(_tables), _tables))
+
+    for data in raw:
+        for table, values in data.items():
+            columns = get_col_names(tables[table])
+            table_data = [dict(zip(columns, row)) for row in values]
+            yield {'table': table, 'data': table_data}

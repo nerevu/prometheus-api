@@ -10,9 +10,11 @@ from json import loads, dumps
 
 import pytest
 
+from app import create_app, db
 from app.helper import (
-    get_table_names, get_models, process, get_init_values, gen_tables,
-    get_keys, JSON, get_json)
+    get_table_names, get_models, process, get_init_data, gen_tables,
+    JSON, get_json)
+
 
 @pytest.fixture
 def client(request):
@@ -20,7 +22,6 @@ def client(request):
     client = app.test_client()
     models = get_models()
     tables = list(gen_tables(models))
-    keys = dict(get_keys(tables))
 
     def get_num_results(table):
         r = client.get(client.prefix + 'commodity_type')
@@ -31,8 +32,9 @@ def client(request):
 
     with app.test_request_context():
         db.create_all()
+        raw = get_init_data()
         client.tables = get_table_names(tables)
-        client.content = [process(v, keys) for v in get_init_values()]
+        client.data = process(raw)
 
     return client
 
@@ -43,13 +45,12 @@ def test_home(client):
 
 
 def test_api_get(client):
-    for bundle in client.content:
-        for piece in bundle:
-            url = client.prefix + piece['table']
+    for piece in client.data:
+        url = client.prefix + piece['table']
 
-            for d in piece['data']:
-                r = client.post(url, data=dumps(d), content_type=JSON)
-                assert r.status_code == 201
+        for d in piece['data']:
+            r = client.post(url, data=dumps(d), content_type=JSON)
+            assert r.status_code == 201
 
     for table in client.tables:
         assert client.get_num_results(table) >= 0
