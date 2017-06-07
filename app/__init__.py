@@ -86,7 +86,7 @@ def create_app(config_mode=None, config_file=None):
 
     @app.route('/')
     @app.route('/<path:path>')
-    def show(path=None):
+    def home(path=None):
         if not path or path == 'index.html':
             return render_template('index.html', **context)
         else:
