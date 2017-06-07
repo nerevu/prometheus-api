@@ -11,7 +11,6 @@ from __future__ import print_function
 import config
 import helper
 
-from inspect import isclass, getmembers
 from itertools import imap, repeat
 from savalidation import ValidationError
 from flask import Flask, make_response, redirect
@@ -28,12 +27,6 @@ API_EXCEPTIONS = [
 db = SQLAlchemy()
 
 
-def _get_app_classes(module):
-	classes = getmembers(module, isclass)
-	app_classes = filter(lambda x: str(x[1]).startswith("<class 'app"), classes)
-	return ['%s' % x[0] for x in app_classes]
-
-
 def jsonify(result):
 	response = make_response(dumps(result, cls=CustomEncoder))
 	response.headers['Content-Type'] = 'application/json; charset=utf-8'
@@ -45,7 +38,7 @@ def jsonify(result):
 def create_app(config_mode=None, config_file=None):
 	# Create webapp instance
 	app = Flask(__name__)
-	models = helper.get_models()
+	modules = helper.get_modules()
 	db.init_app(app)
 
 	if config_mode:
@@ -87,15 +80,15 @@ def create_app(config_mode=None, config_file=None):
 		'max_results_per_page': app.config['API_MAX_RESULTS_PER_PAGE'],
 		'url_prefix': app.config['API_URL_PREFIX']}
 
-	# provides a nested list of class names grouped by model in the form [[],[]]
+	# provides a nested list of model names grouped by module in the form [[],[]]
 	# [[], ['Event', 'Type']]
-	nested_classes = map(_get_app_classes, models)
+	models = map(helper.get_models, modules)
 
-	# provides a list of tuples (module, [list of class names])
+	# provides a list of tuples (module, [list of models])
 	# in the form [(<module>,[]),(<module>,[])]
 	# [(<module 'app.hermes.models' from '/path/to/models.pyc'>,
 	# 	['Event', 'Type'])]
-	sets = zip(models, nested_classes)
+	sets = zip(modules, models)
 
 	# provides a nested iterator of classes in the expanded form of <class>
 	# <class 'app.hermes.models.Event'>
