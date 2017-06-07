@@ -183,7 +183,8 @@ class Swaggerify(object):
                             'description': '{} id to delete'.format(schema),
                             'required': True,
                             'type': 'integer'}],
-                    'responses': {204: {'description': '{} deleted'.format(schema)}}}
+                    'responses': {204: {
+                        'description': '{} deleted'.format(schema)}}}
             elif method == 'post':
                 self.swagger['paths'][path][method] = {
                     'summary': 'create a new {}'.format(schema),
@@ -193,7 +194,8 @@ class Swaggerify(object):
                             'name': 'body',
                             'in': 'body',
                             'description': '{} object to create'.format(schema),
-                            'schema': {'$ref': '#/definitions/{}_flat'.format(name)},
+                            'schema': {
+                                '$ref': '#/definitions/{}_flat'.format(name)},
                             'required': True}],
                     'responses': {
                         201: {
@@ -210,7 +212,8 @@ class Swaggerify(object):
                             'in': 'path',
                             'description': '{} id to update'.format(schema),
                             'type': 'integer'}],
-                    'responses': {202: {'description': '{} updated'.format(schema)}}}
+                    'responses': {202: {
+                        'description': '{} updated'.format(schema)}}}
 
         if name not in self.tags:
             tag = {'name': name, 'description': '{} operations'.format(schema)}
@@ -222,18 +225,14 @@ class Swaggerify(object):
         columns = dict(gen_columns(table))
 
         for column_name, column in sorted(columns.items()):
-            if column_name in self.exclude_columns:
+            excluded = column_name in self.exclude_columns
+            is_id = column_name == 'id'
+            is_related = not hasattr(column, 'type')
+
+            if excluded or (flat and (is_id or is_related)):
                 continue
 
-            if flat and column_name == 'id':
-                continue
-
-            try:
-                column_type = str(column.type)
-            except AttributeError:
-                if flat:
-                    continue
-
+            if is_related:
                 related = get_related_model(table, column_name)
                 related_name = related.__tablename__
                 column_defn = {'$ref': '#/definitions/{}'.format(related_name)}
@@ -241,6 +240,8 @@ class Swaggerify(object):
                 if '{}_id'.format(column_name) not in columns:
                     column_defn = {'type': 'array', 'items': column_defn}
             else:
+                column_type = str(column.type)
+
                 if '(' in column_type:
                     column_type = column_type.split('(')[0]
 

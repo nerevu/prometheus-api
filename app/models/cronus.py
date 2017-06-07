@@ -140,6 +140,7 @@ class Account(db.Model, ValidationMixin):
         db.Integer, db.ForeignKey(
             'account_type.id', onupdate="CASCADE", ondelete="CASCADE"),
         nullable=False)
+
     type = db.relationship(
         'AccountType', lazy='joined',
         backref=backref('accounts', cascade='all, delete'))

@@ -10,7 +10,11 @@ from inspect import isclass, getmembers
 from os import path as p, listdir
 from itertools import repeat
 from json import loads, dumps
-from urllib.parse import urlsplit
+
+try:
+    from urllib.parse import urlsplit
+except ImportError:
+    from urlparse import urlsplit
 
 import requests
 
@@ -66,8 +70,8 @@ def get_table_names(tables):
 def gen_columns(table, related=True):
     """Yields all the columns of the specified `table` class.
 
-    This includes `hybrid attributes`_.
-    .. _hybrid attributes: docs.sqlalchemy.org/en/latest/orm/extensions/hybrid.html
+    This includes `hybrid`_ attributes.
+    .. _hybrid: docs.sqlalchemy.org/en/latest/orm/extensions/hybrid.html
     """
     for superclass in table.__mro__:
         for name, column in superclass.__dict__.items():
@@ -93,7 +97,9 @@ def get_init_data():
             'account_type': [(0, 'Brokerage'), (0, 'Roth IRA')],
             'commodity_group': [[('Security')], [('Currency')], [('Other')]],
             'company': [
-                ('', '', 'Scottrade', '', '', 'https://trading.scottrade.com/', ''),
+                (
+                    '', '', 'Scottrade', '', '',
+                    'https://trading.scottrade.com/', ''),
                 ('', '', 'Vanguard', '', '', 'http://vanguard.com/', '')],
             'data_source': [[('Yahoo')], [('Google')], [('XE')]],
             'event_type': [
@@ -117,7 +123,9 @@ def get_init_data():
                 (1, 1, 'Caterpillar', 'CAT', 1)]
         }, {
             'person': [
-                ('', 1, 'reubano@gmail.com', 'Reuben', 'Cummings', 0, 0, 0, '')],
+                (
+                    '', 1, 'reubano@gmail.com', 'Reuben', 'Cummings',
+                    0, 0, 0, '')],
             'account': [
                 (0, 1, 1, 0, 'Scottrade', 1, 0, 1),
                 (0, 2, 1, 0, 'Vanguard IRA', 1, 0, 1)],

@@ -9,12 +9,11 @@ from __future__ import (
 
 from os import path as p
 from subprocess import call, check_call, CalledProcessError
-from pprint import pprint
 
 try:
-    from urllib.parse import urlsplit, urlencode, parse_qs
+    from urllib.parse import urlsplit
 except ImportError:
-    from urlparse import urlsplit, urlencode, parse_qs
+    from urlparse import urlsplit
 
 from app import create_app, db, helper
 from app.helper import DEF_PORT

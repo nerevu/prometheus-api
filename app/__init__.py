@@ -35,7 +35,10 @@ __version__ = '0.17.0'
 __title__ = 'prometheus-api'
 __package_name__ = 'prometheus-api'
 __author__ = 'Reuben Cummings'
-__description__ = 'RESTful API for [prometheus](https://github.com/nerevu/prometheus), an asset allocation tool'
+__description__ = (
+    'RESTful API for [prometheus](https://github.com/nerevu/prometheus), '
+    'an asset allocation tool')
+
 __email__ = 'reubano@gmail.com'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2017 Reuben Cummings'
