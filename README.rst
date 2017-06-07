@@ -116,7 +116,7 @@ Commands
       createdb    Creates database if it doesn't already exist
       initdb     Removes all content from database and creates new tables
       serve   Runs the Flask development server i.e. app.run()
-      runtests    Run nose tests
+      test    Run nose tests
       shell       Runs a Python shell inside Flask application context.
 
 Command options
@@ -372,7 +372,7 @@ Contributing
 4. Use tabs **not** spaces
 5. Add upstream ``git remote add upstream https://github.com/reubano/prometheus-api.git``
 6. Rebase ``git rebase upstream/master``
-7. Test ``manage runtests``
+7. Test ``manage test``
 8. Push ``git push origin master``
 9. Submit a pull request
 
@@ -383,7 +383,7 @@ Contributing
 2. Use tabs **not** spaces
 3. Update upstream ``git fetch upstream``
 4. Rebase ``git rebase upstream/master``
-5. Test ``manage runtests``
+5. Test ``manage test``
 6. Push ``git push origin master``
 7. Submit a pull request
 
