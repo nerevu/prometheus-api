@@ -1,4 +1,54 @@
-.DS_Store
-*.DS_Store
-*.pyc
+# Python
+*.py[cod]
+.cookiecutter
+.ipynb_checkpoints/*
+*checkpoint.ipynb
+
+# C extensions
+*.so
+
+# Packages
+*.egg*
+.installed.cfg
+dist
+build
+eggs
+parts
+var
+sdist
+develop-eggs
+lib
+lib64
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+*.wpu
+*.rope
+*.noseids
+*.ropeproject
+.coverage
+.tox
+.noseids
+.scripttest/*
+.cache/*
+*.xml
+cover/*
+
+# Translations
+*.mo
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+
+# Complexity
+output/*.html
+output/*/index.html
+
+# Sphinx
+docs/_build
+build/*
 app.db

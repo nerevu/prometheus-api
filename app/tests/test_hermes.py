@@ -1,134 +1,122 @@
 # -*- coding: utf-8 -*-
 """
-	app.tests.test_hermes
-	~~~~~~~~~~~~~~~~
+    app.tests.test_hermes
+    ~~~~~~~~~~~~~~~~~~~~~
 
-	Provides unit tests for the :mod:`app.hermes` module.
+    Provides unit tests for the :mod:`app.hermes` module.
 """
 
-import nose.tools as nt
+from json import loads, dumps
 
-from . import APIHelper, get_globals, check_equal, loads, err
-from pprint import pprint
+import pytest
+
 from app import create_app, db
+from app.helper import (
+    get_table_names, get_models, process, get_init_data, gen_tables,
+    JSON, get_json)
 
 
-def setup_module():
-	"""site initialization"""
-	global initialized
-	global content
+@pytest.fixture
+def client(request):
+    app = create_app(config_mode='Test')
+    client = app.test_client()
+    models = get_models()
+    tables = list(gen_tables(models))
 
-	content = get_globals()[2]
-	initialized = True
-	print('Hermes Module Setup\n')
+    def get_num_results(table):
+        r = client.get(client.prefix + table)
+        return get_json(r)['num_results']
+
+    def get_type(table):
+        r = client.get('{}{}/1'.format(client.prefix, table))
+        return get_json(r)['type']['id']
+
+    client.prefix = app.config.get('API_URL_PREFIX', '')
+    client.get_num_results = get_num_results
+    client.get_type = get_type
+
+    with app.test_request_context():
+        db.create_all()
+        client.tables = get_table_names(tables)
+        raw = get_init_data()
+
+        for piece in process(raw):
+            url = client.prefix + piece['table']
+
+            for d in piece['data']:
+                client.post(url, data=dumps(d), content_type=JSON)
+
+    return client
 
 
-class TestHermesAPI(APIHelper):
-	"""Unit tests for the API endpoints"""
-	def __init__(self):
-		self.cls_initialized = False
+def test_patch_commodity_exisiting_type(client):
+    """Test for patching a commodity with an existing type using
+    :http:method:`patch`.
+    """
+    table = 'commodity'
+    init_type = client.get_type(table)
+    types = client.get_num_results('commodity_type')
 
-	def setUp(self):
-		"""database initialization"""
-		assert not self.cls_initialized
-		db.create_all()
+    # patch the first commodity with an existing type
+    choices = range(1, types + 1)
+    new = [x for x in choices if x != init_type][0]
+    d = {'type': {'add': {'id': new}}}
+    url = '{}{}/1'.format(client.prefix, table)
+    r = client.patch(url, data=dumps(d), content_type=JSON)
+    assert r.status_code == 200
 
-		for bundle in content:
-			for piece in bundle:
-				# err.write('\n%s\n' % piece)
-				table = piece['table']
-				data = piece['data']
+    # test that the new commodity type was changed
+    assert client.get_type(table) == new
 
-				for d in data:
-					r = self.post_data(d, table)
-					# err.write('\n%s' % table)
-					# err.write('\n%s' % d)
-					# err.write('\n%s\n' % r.data)
-					nt.assert_equal(r.status_code, 201)
 
-		self.cls_initialized = True
+def test_patch_commodity_new_type(client):
+    """Test for patching a commodity with a new type using
+    :http:method:`patch`.
+    """
+    table = 'commodity'
+    init_type = client.get_type(table)
+    types = client.get_num_results('commodity_type')
 
-		print('\TestHermesAPI Class Setup\n')
+    # patch the commodity with a new type
+    d = {'type': {'add': {'name': 'Brand New', 'group_id': 2}}}
+    url = '{}{}/1'.format(client.prefix, table)
+    r = client.patch(url, data=dumps(d), content_type=JSON)
+    assert r.status_code == 200
 
-	def tearDown(self):
-		"""database removal"""
-		assert self.cls_initialized
-		db.drop_all()
-		self.cls_initialized = False
+    # test that the new commodity type was changed
+    assert client.get_type(table) != init_type
+    assert client.get_num_results('commodity_type') == types + 1
 
-		print('TestAPI Class Teardown\n')
 
-	def test_patch_commodity_exisiting_type(self):
-		"""Test for patching a commodity with an existing type using
-		:http:method:`patch`.
-		"""
-		# set table
-		table = 'commodity'
+def test_post_event_new_type(client):
+    """Test for posting an event using :http:method:`post`."""
+    # check initial number of events and type
+    types = client.get_num_results('event_type')
+    events = client.get_num_results('event')
 
-		# check initial commodity type
-		type = self.get_type(table)
+    # add event
+    d = {
+        'commodity_id': 3, 'date': '1/22/12',
+        'type': {'name': 'Brand New'}, 'currency_id': 3, 'value': 100}
 
-		# check initial number of commodity types
-		types = self.get_num_results('commodity_type')
+    url = '{}event'.format(client.prefix)
+    r = client.post(url, data=dumps(d), content_type=JSON)
+    assert r.status_code == 201
 
-		# patch the first commodity with an existing type
-		choices = range(1, types + 1)
-		new = [x for x in choices if x != type][0]
-		patch = {'type': {'add': {'id': new}}}
-		r = self.patch_data(patch, table, 1)
-		nt.assert_equal(r.status_code, 200)
+    # test that the new event and type were added
+    assert client.get_num_results('event') == events + 1
+    assert client.get_num_results('event_type') == types + 1
 
-		# test that the new commodity type was changed
-		nt.assert_equal(self.get_type(table), new)
 
-	def test_patch_commodity_new_type(self):
-		"""Test for patching a commodity with a new type using
-		:http:method:`patch`.
-		"""
-		# set table
-		table = 'commodity'
+def test_post_price(client):
+    """Test for posting a price using :http:method:`post`."""
+    table = 'price'
+    num = client.get_num_results(table)
 
-		# check initial num of commodity types
-		types = self.get_num_results('commodity_type')
+    # add price
+    d = {'commodity_id': 1, 'currency_id': 3, 'close': 30}
+    r = client.post(client.prefix + table, data=dumps(d), content_type=JSON)
+    assert r.status_code == 201
 
-		# patch the first commodity with a new type
-		patch = {
-			'type': {'add': {'name': 'Brand New', 'group_id': 2}}}
-		r = self.patch_data(patch, table, 1)
-		nt.assert_equal(r.status_code, 200)
-
-		# test that the new commodity type was changed
-		nt.assert_equal(self.get_type(table), types + 1)
-
-	def test_post_event_new_type(self):
-		"""Test for posting an event using :http:method:`post`."""
-		# check initial number of events and type
-		types = self.get_num_results('event_type')
-		events = self.get_num_results('event')
-
-		# add event
-		data = {
-			'commodity_id': 3, 'date': '1/22/12',
-			'type': {'name': 'Brand New'}, 'currency_id': 3, 'value': 100}
-		r = self.post_data(data, 'event')
-		nt.assert_equal(r.status_code, 201)
-
-		# test that the new event and type were added
-		nt.assert_equal(self.get_num_results('event'), events + 1)
-		nt.assert_equal(self.get_num_results('event_type'), types + 1)
-
-	def test_post_price(self):
-		"""Test for posting a price using :http:method:`post`."""
-		# set table
-		table = 'price'
-
-		# check number of prices
-		num = self.get_num_results(table)
-
-		# add price
-		data = {'commodity_id': 1, 'currency_id': 3, 'close': 30}
-		r = self.post_data(data, table)
-		nt.assert_equal(r.status_code, 201)
-
-		# test that the new price was added
-		nt.assert_equal(self.get_num_results(table), num + 1)
+    # test that the new price was added
+    assert client.get_num_results(table) == num + 1
