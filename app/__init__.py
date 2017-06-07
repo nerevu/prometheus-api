@@ -30,7 +30,7 @@ from app import helper
 from app.frs import Swaggerify
 from builtins import *
 
-__version__ = '0.17.0'
+__version__ = '0.18.0'
 
 __title__ = 'prometheus-api'
 __package_name__ = 'prometheus-api'
