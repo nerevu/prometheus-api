@@ -9,9 +9,12 @@ from importlib import import_module
 from inspect import isclass, getmembers
 from os import path as p, listdir
 from itertools import repeat
-from json import loads
+from json import loads, dumps
+from urllib.parse import urlsplit
 
-from flask import current_app as app
+import requests
+
+from flask import current_app as app, url_for
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -19,6 +22,8 @@ from builtins import *
 
 COLUMN_TYPES = (InstrumentedAttribute, hybrid_property)
 JSON = 'application/json'
+DEF_PORT = 5000
+
 get_json = lambda r: loads(r.get_data(as_text=True))
 
 
@@ -107,24 +112,30 @@ def get_init_data():
                 (3, 4, 'Canadian Dollar', 'CAD', 5),
                 (3, 4, 'Multiple', 'Multiple', 6),
                 (1, 1, 'Apple', 'AAPL', 1),
-                (3, 4, 'Text', 'Text', 6)]
+                (1, 1, 'International Business Machines', 'IBM', 1),
+                (1, 1, 'Wal-Mart', 'WMT', 1),
+                (1, 1, 'Caterpillar', 'CAT', 1)]
         }, {
             'person': [
                 ('', 1, 'reubano@gmail.com', 'Reuben', 'Cummings', 0, 0, 0, '')],
             'account': [
                 (0, 1, 1, 0, 'Scottrade', 1, 0, 1),
                 (0, 2, 1, 0, 'Vanguard IRA', 1, 0, 1)],
-            'holding': [(1, 6, '')],
+            'holding': [(1, 6, ''), (1, 7, ''), (1, 8, '')],
         }]
 
 
-def get_pop_values():
-    return [{
-        'commodity': [
-            (1, 1, 'International Business Machines', 'IBM', 1),
-            (1, 1, 'Wal-Mart', 'WMT', 1),
-            (1, 1, 'Caterpillar', 'CAT', 1)],
-        'holding': [(1, 8, ''), (1, 9, ''), (1, 10, '')]}]
+def post(table, data, port=DEF_PORT):
+    base = '{table}api0.{table}api'
+    headers = {'content-type': 'application/json'}
+    url = url_for(base.format(table=table), _external=True)
+
+    if 'localhost/' in url:
+        parsed = urlsplit(url)._asdict()
+        parsed['port'] = port
+        url = '{scheme}://{netloc}:{port}{path}'.format(**parsed)
+
+    return requests.post(url, data=dumps(data), headers=headers)
 
 
 def process(raw):

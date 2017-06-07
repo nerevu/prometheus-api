@@ -16,12 +16,12 @@ try:
 except ImportError:
     from urlparse import urlsplit, urlencode, parse_qs
 
-from app import create_app, db
+from app import create_app, db, helper
+from app.helper import DEF_PORT
 from flask import current_app as app
 from flask_script import Server, Manager
 
 BASEDIR = p.dirname(__file__)
-DEF_PORT = 5000
 
 manager = Manager(create_app)
 manager.add_option(
@@ -150,11 +150,28 @@ def cleardb():
 
 
 @manager.command
-def resetdb():
+def initdb():
     """Removes all content from database and creates new tables"""
     with app.app_context():
         cleardb()
         createdb()
+
+    print('Database initialized')
+
+
+@manager.option('-p', '--port', help='The server port', default=DEF_PORT)
+def popdb(port):
+    """Populates the database with sample data"""
+    with app.app_context():
+        initdb()
+        raw = helper.get_init_data()
+
+        for piece in helper.process(raw):
+            for data in piece['data']:
+                r = helper.post(piece['table'], data=data, port=port)
+                print(r.status_code if r.ok else r.json()['message'])
+
+    print('Database populated')
 
 
 @manager.option('-r', '--remote', help='the heroku branch', default='staging')

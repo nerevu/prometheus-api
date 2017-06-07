@@ -6,3 +6,4 @@ SAValidation==0.4.1
 SQLAlchemy==1.1.10
 PyYAML==3.12
 pkutils>=0.13.6
+requests==2.13.0

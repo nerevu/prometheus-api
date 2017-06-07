@@ -99,19 +99,6 @@ def create_app(config_mode=None, config_file=None):
         db.create_all()
         return jsonify({'objects': 'Database reset!'})
 
-    @app.route('/keys/')
-    def keys():
-        tables = helper.gen_tables()
-        return jsonify({'objects': dict(helper.get_col_names(tables))})
-
-    @app.route('/init_values/')
-    def init_values():
-        return jsonify({'objects': helper.get_init_data()})
-
-    @app.route('/pop_values/')
-    def pop_values():
-        return jsonify({'objects': helper.get_pop_values()})
-
     # Create the Flask-Restless API manager.
     mgr = APIManager(app, flask_sqlalchemy_db=db)
     kwargs = {

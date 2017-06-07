@@ -1,22 +1,24 @@
-prometheus-api |build|
+prometheus-api |travis|
 ======================
 
 .. |build| image:: https://secure.travis-ci.org/reubano/prometheus-api.png
 
+.. |travis| image:: https://img.shields.io/travis/nerevu/prometheus-api/master.svg
+    :target: https://travis-ci.org/nerevu/prometheus-api
+
 Introduction
 ------------
 
-`Prometheus-API <http://prometheus-api.herokuapp.com>`_ is the `Flask <http://flask.pocoo.org>`_ (`About Flask`_) powered RESTful API behind `Prometheus <http://prometheus.herokuapp.com>`_ (`About Prometheus`_). It has been tested on the following configuration:
-
-- MacOS X 10.7.5
-- Python 2.7.4
+`Prometheus-API <http://prometheus-api.herokuapp.com>`_ is the `Flask <http://flask.pocoo.org>`_ (`About Flask`_) powered RESTful API behind `Prometheus <http://prometheus.herokuapp.com>`_ (`About Prometheus`_).
 
 Requirements
 ------------
 
-Prometheus-API requires the following in order to run properly:
+Prometheus-API has been tested and known to work on the following configurations:
 
-- `Python >= 2.7 <http://www.python.org/download>`_
+- MacOS X 10.9.5
+- Ubuntu 14.04 LTS
+- Python 2.7, 3.5, and 3.6
 
 Framework
 ---------
@@ -32,42 +34,33 @@ Flask Extensions
 Production Server
 ^^^^^^^^^^^^^^^^^
 
+- `PostgreSQL <http://postgresql.org/>`_
 - `gunicorn <http://gunicorn.org/>`_
 - `gevent <http://www.gevent.org/>`_
-
 
 Quick Start
 -----------
 
-*Clone the repos*
+*Clone the repo*
 
-::
+.. code-block:: bash
 
-	git clone git@github.com:reubano/prometheus-api.git
-	git clone git@github.com:reubano/prometheus.git
+    git clone git@github.com:reubano/prometheus-api.git
 
 *Install requirements*
 
-::
+.. code-block:: bash
 
-	cd prometheus-api
-	sudo easy_install pip
-	sudo pip install -r requirements-local.txt
-	cd ../prometheus
-	sudo easy_install pip
-	sudo pip install -r requirements-local.txt
+    cd prometheus-api
+    pip install -r base-requirements.txt
 
 *Run API server*
 
-	cd ../prometheus-api
-	./manage.py runserver -p 5005
+.. code-block:: bash
 
-*Run app server* (in new tab)
+    manage serve
 
-	cd ../prometheus
-	./manage.py runserver
-
-Now *view the app* at ``http://localhost:5000``
+Now *view the API documentation* at ``http://localhost:5000``
 
 Scripts
 -------
@@ -78,77 +71,85 @@ server, run tests, and initialize the database.
 Usage
 ^^^^^
 
-	./manage.py <command> [command-options] [manager-options]
+    manage <command> [command-options] [manager-options]
 
 Examples
 ^^^^^^^^
 
 *Start server*
 
-	./manage.py runserver
+    manage serve
 
-*Run nose tests*
+*Run tests*
 
-	./manage.py runtests
+    manage test
 
-*Initialize the production database*
+*Run linters*
 
-	./manage.py initdb -m Production
+    manage lint
+
+*Initialize the dev database*
+
+    manage initdb
+
+*Populate the production database*
+
+    manage popdb -m Production
 
 Manager options
 ^^^^^^^^^^^^^^^
 
 ::
 
-	  -m MODE, --cfgmode=MODE  set the configuration mode, must be one of
-	                           ['Production', 'Development', 'Test'] defaults
-	                           to 'Development'. See `config.py` for details
-	  -f FILE, --cfgfile=FILE  set the configuration file (absolute path)
+      -m MODE, --cfgmode=MODE  set the configuration mode, must be one of
+                               ['Production', 'Development', 'Test'] defaults
+                               to 'Development'. See `config.py` for details
+      -f FILE, --cfgfile=FILE  set the configuration file (absolute path)
 
 Commands
 ^^^^^^^^
 
 ::
 
-	  checkstage  Checks staged with git pre-commit hook
-	  cleardb     Removes all content from database
-	  createdb    Creates database if it doesn't already exist
-	  resetdb     Removes all content from database and creates new tables
-	  runserver   Runs the Flask development server i.e. app.run()
-	  runtests    Run nose tests
-	  shell       Runs a Python shell inside Flask application context.
+      checkstage  Checks staged with git pre-commit hook
+      cleardb     Removes all content from database
+      createdb    Creates database if it doesn't already exist
+      initdb     Removes all content from database and creates new tables
+      serve   Runs the Flask development server i.e. app.run()
+      runtests    Run nose tests
+      shell       Runs a Python shell inside Flask application context.
 
 Command options
 ^^^^^^^^^^^^^^^
 
-Type ``./manage.py <command> -h`` to view any command's options
+Type ``manage <command> -h`` to view any command's options
 
-	./manage.py manage runserver -h
+    manage manage serve -h
 
 ::
 
-	usage: ./manage.py runserver [-h] [-t HOST] [-p PORT] [--threaded]
-	                             [--processes PROCESSES] [--passthrough-errors]
-	                             [-d] [-r]
+    usage: manage serve [-h] [-t HOST] [-p PORT] [--threaded]
+                                 [--processes PROCESSES] [--passthrough-errors]
+                                 [-d] [-r]
 
-	Runs the Flask development server i.e. app.run()
+    Runs the Flask development server i.e. app.run()
 
-	optional arguments:
-	  -h, --help              show this help message and exit
-	  -t HOST, --host HOST
-	  -p PORT, --port PORT
-	  --threaded
-	  --processes PROCESSES
-	  --passthrough-errors
-	  -d, --no-debug
-	  -r, --no-reload
+    optional arguments:
+      -h, --help              show this help message and exit
+      -t HOST, --host HOST
+      -p PORT, --port PORT
+      --threaded
+      --processes PROCESSES
+      --passthrough-errors
+      -d, --no-debug
+      -r, --no-reload
 
 Example
 ^^^^^^^
 
 *Start production server on port 1000*
 
-	./manage.py runserver -p 1000 -m Production
+    manage serve -p 1000 -m Production
 
 Configuration
 -------------
@@ -178,29 +179,29 @@ Prometheus-API will reference the ``SECRET_KEY`` environment variable in ``confi
 
 To set this environment variable, *do the following*:
 
-	echo 'export SECRET_KEY=value' >> ~/.profile
+    echo 'export SECRET_KEY=value' >> ~/.profile
 
 Documentation
 -------------
 
 For a list of available resources, example requests and responses, and code samples,
-view the `online documentation <http://docs.prometheus.apiary.io/>`_. View the `Flask-Restless guide <http://flask-restless.readthedocs.org>`_ for more `request/response examples <http://flask-restless.readthedocs.org/en/latest/requestformat.html>`_ and directions on `making search queries. <http://flask-restless.readthedocs.org/en/latest/searchformat.html>`_
+view the `online documentation <https://prometheus-api.herokuapp.com/>`_. View the `Flask-Restless guide <http://flask-restless.readthedocs.org>`_ for more `request/response examples <http://flask-restless.readthedocs.org/en/latest/requestformat.html>`_ and directions on `making search queries. <http://flask-restless.readthedocs.org/en/latest/searchformat.html>`_
 
 Services
 ----------
 
-The Prometheus API is seperated into differenet services, each responsible for performing a specific set of tasks.
+The Prometheus API is separated into different services, each responsible for performing a specific set of tasks.
 
-========= ================================================================
-service   description
-========= ================================================================
-Hermes    price/event data agregator
-Cronus    portfolio performance analytics and allocation engine
-Icarus    portfolio risk profiler
-Oracle    random portfolio generator
-Lynx      portfolio x-ray engine
-Rosetta   3rd party portfolio data converter
-========= ==============================================================
+======= =======================================================
+service description
+======= =======================================================
+Hermes  price/event data aggregate
+Cronus  portfolio performance analytics and allocation engine
+Icarus  portfolio risk profiler *(coming soon)*
+Oracle  random portfolio generator *(coming soon)*
+Lynx    portfolio x-ray engine *(coming soon)*
+Rosetta 3rd party portfolio data converter *(coming soon)*
+======= =======================================================
 
 
 Advanced Installation
@@ -213,41 +214,26 @@ Ideally, you should install python modules for every project into a `virtual env
 This setup will allow you to use different versions of the same module in different
 projects without worrying about adverse interactions.
 
-	sudo pip install virtualenv virtualenvwrapper
+    sudo pip install virtualenv virtualenvwrapper
 
 *Add the following* to your ``~/.profile``
 
-::
+.. code-block:: bash
 
-	export WORKON_HOME=$HOME/.virtualenvs
-	export PIP_VIRTUALENV_BASE=$WORKON_HOME
-	export PIP_RESPECT_VIRTUALENV=true
-	source /usr/local/bin/virtualenvwrapper.sh
+    export WORKON_HOME=$HOME/.virtualenvs
+    export PIP_VIRTUALENV_BASE=$WORKON_HOME
+    export PIP_RESPECT_VIRTUALENV=true
+    source /usr/local/bin/virtualenvwrapper.sh
 
 *Create your new API virtualenv*
 
-::
+.. code-block:: bash
 
-	cd prometheus-api
-	mkvirtualenv --no-site-packages prometheus-api
-	sudo easy_install pip
-	sudo pip install -r requirements-local.txt
+    cd prometheus-api
+    mkvirtualenv --no-site-packages prometheus-api
+    sudo easy_install pip
+    sudo pip install -r base-requirements.txt
 
-*Create your new app virtualenv*
-
-::
-
-	cd ../prometheus
-	mkvirtualenv --no-site-packages prometheus
-	sudo easy_install pip
-	sudo pip install -r requirements-local.txt
-
-Prometheus setup
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-By default, Prometheus uses the API hosted at http://prometheus-api.herokuapp.com.
-To setup Prometheus to use your own API, set the ``__API_BASE__`` variable in
-``config.py`` in the prometheus repository to the appropriate url.
 
 Production Server
 ^^^^^^^^^^^^^^^^^
@@ -258,42 +244,42 @@ To use ``gevent``, you first need to install ``libevent``.
 
 *Linux*
 
-	apt-get install libevent-dev
+    apt-get install libevent-dev
 
 *Mac OS X via* `homebrew <http://mxcl.github.com/homebrew/>`_
 
-	brew install libevent
+    brew install libevent
 
 *Mac OS X via* `macports <http://www.macports.com/>`_
 
-	sudo port install libevent
+    sudo port install libevent
 
 *Mac OS X via DMG*
 
-	`download on Rudix <http://rudix.org/packages-jkl.html#libevent>`_
+    `download on Rudix <http://rudix.org/packages-jkl.html#libevent>`_
 
 Now that libevent is handy, *install the remaining requirements*
 
-	sudo pip install -r requirements.txt
+    sudo pip install -r requirements.txt
 
 Or via the following if you installed libevent from macports
 
-::
+.. code-block:: bash
 
-	sudo CFLAGS="-I /opt/local/include -L /opt/local/lib" pip install gevent
-	sudo pip install -r requirements.txt
+    sudo CFLAGS="-I /opt/local/include -L /opt/local/lib" pip install gevent
+    sudo pip install -r requirements.txt
 
 Finally, *install foreman*
 
-	sudo gem install foreman
+    sudo gem install foreman
 
 Now, you can *run the application* locally
 
-	foreman start
+    foreman start
 
 You can also *specify what port you'd prefer to use*
 
-	foreman start -p 5555
+    foreman start -p 5555
 
 
 Deployment
@@ -306,35 +292,35 @@ Heroku <http://devcenter.heroku.com/articles/quickstart>`_, and also
 
 *Install heroku and create your app*
 
-::
+.. code-block:: bash
 
-	sudo gem install heroku
-	heroku create -s cedar app_name
+    sudo gem install heroku
+    heroku create -s cedar app_name
 
 *Add the database*
 
-::
+.. code-block:: bash
 
-	heroku addons:add heroku-postgresql:dev
-	heroku pg:promote HEROKU_POSTGRESQL_COLOR
+    heroku addons:add heroku-postgresql:dev
+    heroku pg:promote HEROKU_POSTGRESQL_COLOR
 
 *Push to Heroku and initialize the database*
 
-::
+.. code-block:: bash
 
-	git push heroku master
-	heroku run python manage.py createdb -m Production
+    git push heroku master
+    heroku run python manage.py createdb -m Production
 
 *Start the web instance and make sure the application is up and running*
 
-::
+.. code-block:: bash
 
-	heroku ps:scale web=1
-	heroku ps
+    heroku ps:scale web=1
+    heroku ps
 
 Now, we can *view the application in our web browser*
 
-	heroku open
+    heroku open
 
 And anytime you want to redeploy, it's as simple as ``git push heroku master``.
 Once you are done coding, deactivate your virtualenv with ``deactivate``.
@@ -342,11 +328,11 @@ Once you are done coding, deactivate your virtualenv with ``deactivate``.
 Directory Structure
 -------------------
 
-	tree . | sed 's/+----/├──/' | sed '/.pyc/d' | sed '/.DS_Store/d'
+    tree . | sed 's/+----/├──/' | sed '/.pyc/d' | sed '/.DS_Store/d'
 
-::
+.. code-block:: bash
 
-	prometheus-api
+    prometheus-api
          ├──Procfile                        (heroku process)
          ├──README.rst                      (this file)
          ├──app
@@ -382,34 +368,34 @@ Contributing
 1. Fork
 2. Clone
 3. Code (if you are having problems committing because of git pre-commit
-   hook errors, just run ``./manage.py checkstage`` to see what the issues are.)
+   hook errors, just run ``manage checkstage`` to see what the issues are.)
 4. Use tabs **not** spaces
 5. Add upstream ``git remote add upstream https://github.com/reubano/prometheus-api.git``
 6. Rebase ``git rebase upstream/master``
-7. Test ``./manage.py runtests``
+7. Test ``manage runtests``
 8. Push ``git push origin master``
 9. Submit a pull request
 
 *Continuing*
 
 1. Code (if you are having problems committing because of git pre-commit
-   hook errors, just run ``./manage.py checkstage`` to see what the issues are.)
+   hook errors, just run ``manage checkstage`` to see what the issues are.)
 2. Use tabs **not** spaces
 3. Update upstream ``git fetch upstream``
 4. Rebase ``git rebase upstream/master``
-5. Test ``./manage.py runtests``
+5. Test ``manage runtests``
 6. Push ``git push origin master``
 7. Submit a pull request
 
 Contributors
 ------------
 
-	git shortlog -sn
+    git shortlog -sn
 
-::
+.. code-block:: bash
 
-	commits: 430
-	  430  Reuben Cummings
+    commits: 430
+      430  Reuben Cummings
 
 About Prometheus
 ----------------
