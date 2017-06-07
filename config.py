@@ -1,54 +1,78 @@
-import os
-from os import path as p
+# -*- coding: utf-8 -*-
+"""
+    config
+    ~~~~~~
 
-# module vars
-_basedir = p.dirname(__file__)
-_user = os.environ.get('USER', os.environ.get('USERNAME', 'default'))
+    Provides the flask config options
+    ###########################################################################
+    # WARNING: if running on a a staging server, you MUST set the 'STAGE' env
+    # heroku config:set STAGE=true --remote staging
+    ###########################################################################
+"""
+from os import getenv, path as p
+from pkutils import parse_module
 
-# configurable vars
-__YOUR_EMAIL__ = '%s@gmail.com' % _user
+PARENT_DIR = p.abspath(p.dirname(__file__))
+app = parse_module(p.join(PARENT_DIR, 'app', '__init__.py'))
+user = getenv('USER', 'user')
+
+__APP_NAME__ = app.__package_name__
+__EMAIL__ = app.__email__
+__DOMAIN__ = 'api.prometheus.com'
+__SUB_DOMAIN__ = __APP_NAME__.split('-')[-1]
 
 
-# configuration
-class Content(object):
-	heroku_app = 'prometheus-api'
+class Config(object):
+    HEROKU = getenv('DATABASE_URL', False)
+    DEBUG = False
+    TESTING = False
+    DEBUG_MEMCACHE = False
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    ADMINS = frozenset([__EMAIL__])
+    HOST = '127.0.0.1'
 
+    end = '-stage' if getenv('STAGE', False) else ''
 
-class Config(Content):
-	app = Content.heroku_app
-	stage = os.environ.get('STAGE', False)
-	end = '-stage' if stage else ''
-	heroku = os.environ.get('DATABASE_URL', False)
+    if HEROKU:
+        SERVER_NAME = '{}{}.herokuapp.com'.format(__APP_NAME__, end)
+    elif getenv('DIGITALOCEAN'):
+        SERVER_NAME = '{}.{}'.format(__SUB_DOMAIN__, __DOMAIN__)
+        SSLIFY_SUBDOMAINS = True
 
-	DEBUG = False
-	ADMINS = frozenset([__YOUR_EMAIL__])
-	TESTING = False
-	HOST = '127.0.0.1'
-	heroku_server = '%s%s.herokuapp.com' % (app, end)
+    SECRET_KEY = getenv('SECRET_KEY', 'secret')
+    API_METHODS = ['GET', 'POST', 'DELETE', 'PATCH', 'PUT']
 
-	if heroku:
-		SERVER_NAME = heroku_server
+    API_ALLOW_FUNCTIONS = True
+    API_ALLOW_PATCH_MANY = True
+    API_RESULTS_PER_PAGE = 32
+    API_MAX_RESULTS_PER_PAGE = 1024
+    API_URL_PREFIX = ''
+    SWAGGER_URL = ''
+    SWAGGER_EXCLUDE_COLUMNS = ['utc_created', 'utc_updated']
 
-	SECRET_KEY = os.environ.get('SECRET_KEY', 'key')
-	API_METHODS = ['GET', 'POST', 'DELETE', 'PATCH', 'PUT']
-	API_ALLOW_FUNCTIONS = True
-	API_ALLOW_PATCH_MANY = True
-	API_MAX_RESULTS_PER_PAGE = 1000
-	API_URL_PREFIX = ''
+    if HEROKU or getenv('DIGITALOCEAN'):
+        SWAGGER_JSON = '{}/{}/swagger.json'.format(SERVER_NAME, API_URL_PREFIX)
+    else:
+        SWAGGER_JSON = '{}/swagger.json'.format(API_URL_PREFIX)
 
 
 class Production(Config):
-
-	defaultdb = 'postgres://%s@localhost/app' % _user
-	SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', defaultdb)
-	HOST = '0.0.0.0'
+    db = __APP_NAME__.replace('-', '_')
+    defaultdb = 'postgres://{}@localhost/{}'.format(user, db)
+    DOMAIN = __DOMAIN__
+    SQLALCHEMY_DATABASE_URI = getenv('DATABASE_URL', defaultdb)
+    HOST = '0.0.0.0'
 
 
 class Development(Config):
-	SQLALCHEMY_DATABASE_URI = 'sqlite:///%s' % p.join(_basedir, 'app.db')
-	DEBUG = True
+    base = 'sqlite:///{}?check_same_thread=False'
+    SQLALCHEMY_DATABASE_URI = base.format(p.join(PARENT_DIR, 'app.db'))
+    DEBUG = True
+    DEBUG_MEMCACHE = False
 
 
 class Test(Config):
-	SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
-	TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    DEBUG = True
+    TESTING = True
+    DEBUG_MEMCACHE = False

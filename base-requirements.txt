@@ -1,0 +1,8 @@
+Flask==0.12.2
+Flask-Restless==0.17.0
+Flask-SQLAlchemy==2.2
+Flask-Script==2.0.5
+SAValidation==0.4.1
+SQLAlchemy==1.1.10
+PyYAML==3.12
+pkutils>=0.13.6

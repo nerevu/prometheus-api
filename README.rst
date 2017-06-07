@@ -1,5 +1,5 @@
 prometheus-api |build|
-==================
+======================
 
 .. |build| image:: https://secure.travis-ci.org/reubano/prometheus-api.png
 
@@ -191,16 +191,16 @@ Services
 
 The Prometheus API is seperated into differenet services, each responsible for performing a specific set of tasks.
 
-========= ================================================================ 
-service   description                                                     
-========= ================================================================ 
+========= ================================================================
+service   description
+========= ================================================================
 Hermes    price/event data agregator
 Cronus    portfolio performance analytics and allocation engine
 Icarus    portfolio risk profiler
 Oracle    random portfolio generator
 Lynx      portfolio x-ray engine
 Rosetta   3rd party portfolio data converter
-========= ============================================================== 
+========= ==============================================================
 
 
 Advanced Installation

@@ -1,32 +1,46 @@
----
+sudo: false
 language: python
 python:
-- '2.7'
+  - "2.7"
+  - "3.5"
+  - "3.6"
 
 notifications:
   email:
     on_success: always
 
 before_install:
-#- sudo apt-get update
-- sudo apt-get install libevent-dev
+  # - sudo apt-get update
+  - sudo apt-get install libevent-dev
 
-install: pip install -r requirements.txt --use-mirrors
-script: nosetests -v
+install:
+  - pip install -U pip
+  - pip install wheel
+  - pip install -r dev-requirements.txt
+  - |
+      if [[ "$TRAVIS_PYTHON_VERSION" == *"3"* ]]; then
+        pip install -r requirements.txt
+      else
+        pip install -r py2-requirements.txt
+      fi
+
+script:
+  - manage lint && manage test
 
 env:
   global:
   - secure: ! "NQEPSJG4rsp43qu4cKN0i52ZISUoE5q7HJm6rhV51snUq47ZEX2maHalUq1e\ntfDCmg9hDHO7+Niu4StkkKR43ULXpn+E1bfHRpdbwAPmqhoEbq2E754whlUA\nINQkxtw4G7tIMIMFK8oLkdwsE+mo+0iGvccjJdG82u3a9sfGcEg="
 
 after_success:
-- if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then exit 0; fi
-- if [[ "$TRAVIS_BRANCH" != "master" ]]; then exit 0; fi
-- wget -qO- https://toolbelt.heroku.com/install-ubuntu.sh | sh
-- git remote add heroku git@heroku.com:prometheus-api.git
-- echo "Host heroku.com" >> ~/.ssh/config
-- echo "   StrictHostKeyChecking no" >> ~/.ssh/config
-- echo "   CheckHostIP no" >> ~/.ssh/config
-- echo "   UserKnownHostsFile=/dev/null" >> ~/.ssh/config
-- heroku keys:clear
-- yes | heroku keys:add
-- yes | git push heroku master
+  - if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then exit 0; fi
+  - if [[ "$TRAVIS_BRANCH" != "master" ]]; then exit 0; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" != "3.6" ]]; then exit 0; fi
+  - wget -qO- https://toolbelt.heroku.com/install-ubuntu.sh | sh
+  - git remote add heroku git@heroku.com:prometheus-api.git
+  - echo "Host heroku.com" >> ~/.ssh/config
+  - echo "   StrictHostKeyChecking no" >> ~/.ssh/config
+  - echo "   CheckHostIP no" >> ~/.ssh/config
+  - echo "   UserKnownHostsFile=/dev/null" >> ~/.ssh/config
+  - heroku keys:clear
+  - yes | heroku keys:add
+  - yes | git push heroku master
