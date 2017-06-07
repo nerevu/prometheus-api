@@ -188,9 +188,6 @@ class Account(db.Model, ValidationMixin):
 
 
 class Contribution(db.Model, ValidationMixin):
-    # constraints
-    __table_args__ = (db.UniqueConstraint('account_id', 'date'), {})
-
     # auto keys
     id = db.Column(db.Integer, primary_key=True)
     utc_created = db.Column(db.DateTime, nullable=False, default=dt.utcnow())
