@@ -30,11 +30,6 @@ manager.add_option('-f', '--cfgfile', dest='config_file', type=p.abspath)
 manager.main = manager.run  # Needed to do `manage <command>` from the cli
 
 
-def clean_():
-    """Remove Python file and build artifacts"""
-    check_call(p.join(BASEDIR, 'helpers', 'clean'))
-
-
 @manager.option('-h', '--host', help='The server host')
 @manager.option('-p', '--port', help='The server port')
 @manager.option(
