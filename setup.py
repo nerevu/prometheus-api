@@ -52,11 +52,8 @@ setup(
     packages=find_packages(exclude=['tests']),
     include_package_data=True,
     package_data={
-        'data': ['data/*'],
-        'helpers': ['helpers/*'],
-        'tests': ['tests/*'],
-        'docs': ['docs/*'],
-        'examples': ['examples/*']
+        'app/templates': ['app/templates/*'],
+        'app/static': ['app/static/*'],
     },
     install_requires=requirements,
     extras_require={
