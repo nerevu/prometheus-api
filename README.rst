@@ -9,7 +9,7 @@ prometheus-api |travis|
 Introduction
 ------------
 
-`Prometheus-API <http://prometheus-api.herokuapp.com>`_ is the `Flask <http://flask.pocoo.org>`_ (`About Flask`_) powered RESTful API behind `Prometheus <http://prometheus.herokuapp.com>`_ (`About Prometheus`_).
+`Prometheus-API <http://prometheus-api.herokuapp.com>`_ is the `Flask <http://flask.pocoo.org>`_ (`About Flask`_) powered RESTful API behind `Prometheus <https://github.com/nerevu/prometheus>`_ (`About Prometheus`_).
 
 Requirements
 ------------
